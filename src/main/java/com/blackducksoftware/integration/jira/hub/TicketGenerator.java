@@ -1,11 +1,15 @@
 package com.blackducksoftware.integration.jira.hub;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.atlassian.crowd.embedded.api.User;
 import com.atlassian.jira.bc.issue.IssueService.CreateValidationResult;
 import com.atlassian.jira.bc.issue.IssueService.IssueResult;
 import com.atlassian.jira.bc.issue.IssueService.TransitionValidationResult;
@@ -15,9 +19,14 @@ import com.atlassian.jira.entity.property.EntityPropertyQuery;
 import com.atlassian.jira.entity.property.EntityPropertyService;
 import com.atlassian.jira.entity.property.EntityPropertyService.PropertyResult;
 import com.atlassian.jira.entity.property.EntityPropertyService.SetPropertyValidationResult;
+import com.atlassian.jira.exception.CreateException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueInputParameters;
+import com.atlassian.jira.issue.link.IssueLinkManager;
+import com.atlassian.jira.issue.link.IssueLinkType;
+import com.atlassian.jira.issue.link.IssueLinkTypeManager;
 import com.atlassian.jira.issue.status.Status;
+import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.ErrorCollection;
 import com.atlassian.jira.workflow.JiraWorkflow;
 import com.blackducksoftware.integration.hub.HubIntRestService;
@@ -39,6 +48,8 @@ import com.opensymphony.workflow.loader.ActionDescriptor;
  *
  */
 public class TicketGenerator {
+
+	public static final String LINK_RELATES = "Relates";
 	public static final String DONE_STATUS = "Done";
 	public static final String REOPEN_STATUS = "Reopen";
 
@@ -68,9 +79,11 @@ public class TicketGenerator {
 		final FilteredNotificationResults notificationResults = filter.extractJiraReadyNotifications(notifs);
 
 		int ticketCount = 0;
-		for (final FilteredNotificationResult notificationResult : notificationResults.getPolicyViolationResults()) {
-			createPolicyViolationIssue(notificationResult);
-			ticketCount++;
+		for (final Entry<String, List<FilteredNotificationResult>> notificationResult : notificationResults
+				.getPolicyViolationResults().entrySet()) {
+			final List<FilteredNotificationResult> violationResults = notificationResult.getValue();
+			createPolicyViolationIssue(violationResults);
+			ticketCount = +violationResults.size();
 		}
 		for (final FilteredNotificationResult notificationResult : notificationResults
 				.getPolicyViolationOverrideResults()) {
@@ -79,72 +92,86 @@ public class TicketGenerator {
 		return ticketCount;
 	}
 
-	private void createPolicyViolationIssue(final FilteredNotificationResult notificationResult){
-		logger.debug("Setting logged in User : " + ticketGenInfo.getJiraUser().getDisplayName());
-		logger.debug("User active : " + ticketGenInfo.getJiraUser().isActive());
+	private void createPolicyViolationIssue(final List<FilteredNotificationResult> notificationResults) {
 
-		ticketGenInfo.getAuthContext().setLoggedInUser(ticketGenInfo.getJiraUser());
+		linkIssues(null, null);
+		Issue firstIssue = null;
 
-		final StringBuilder issueSummary = new StringBuilder();
-		issueSummary.append("Black Duck ");
-		issueSummary.append(notificationResult.getNotificationType().getDisplayName());
-		issueSummary.append(" detected on Hub Project '");
-		issueSummary.append(notificationResult.getHubProjectName());
-		issueSummary.append("' / '");
-		issueSummary.append(notificationResult.getHubProjectVersion());
-		issueSummary.append("', component '");
-		issueSummary.append(notificationResult.getHubComponentName());
-		issueSummary.append("' / '");
-		issueSummary.append(notificationResult.getHubComponentVersion());
-		issueSummary.append("' [Rule: '");
-		issueSummary.append(notificationResult.getRule().getName());
-		issueSummary.append("']");
+		for (final FilteredNotificationResult notificationResult : notificationResults) {
 
-		final StringBuilder issueDescription = new StringBuilder();
-		issueDescription.append("The Black Duck Hub has detected a ");
-		issueDescription.append(notificationResult.getNotificationType().getDisplayName());
-		issueDescription.append(" on Hub Project '");
-		issueDescription.append(notificationResult.getHubProjectName());
-		issueDescription.append("', component '");
-		issueDescription.append(notificationResult.getHubComponentName());
-		issueDescription.append("' / '");
-		issueDescription.append(notificationResult.getHubComponentVersion());
-		issueDescription.append("'. The rule violated is: '");
-		issueDescription.append(notificationResult.getRule().getName());
-		issueDescription.append("'. Rule overridable : ");
-		issueDescription.append(notificationResult.getRule().getOverridable());
+			logger.debug("Setting logged in User : " + ticketGenInfo.getJiraUser().getDisplayName());
+			logger.debug("User active : " + ticketGenInfo.getJiraUser().isActive());
 
-		final IssueInputParameters issueInputParameters =
-				ticketGenInfo.getIssueService()
-				.newIssueInputParameters();
-		issueInputParameters.setProjectId(notificationResult.getJiraProjectId())
-		.setIssueTypeId(notificationResult.getJiraIssueTypeId()).setSummary(issueSummary.toString())
-		.setReporterId(notificationResult.getJiraUser().getName())
-		.setDescription(issueDescription.toString());
+			ticketGenInfo.getAuthContext().setLoggedInUser(ticketGenInfo.getJiraUser());
 
-		final Issue oldIssue = findIssue(notificationResult);
-		if (oldIssue == null) {
-			final Issue issue = createIssue(issueInputParameters);
-			if (issue != null) {
-				logger.info("Created new Issue.");
-				printIssueInfo(issue);
+			final StringBuilder issueSummary = new StringBuilder();
+			issueSummary.append("Black Duck ");
+			issueSummary.append(notificationResult.getNotificationType().getDisplayName());
+			issueSummary.append(" detected on Hub Project '");
+			issueSummary.append(notificationResult.getHubProjectName());
+			issueSummary.append("' / '");
+			issueSummary.append(notificationResult.getHubProjectVersion());
+			issueSummary.append("', component '");
+			issueSummary.append(notificationResult.getHubComponentName());
+			issueSummary.append("' / '");
+			issueSummary.append(notificationResult.getHubComponentVersion());
+			issueSummary.append("' [Rule: '");
+			issueSummary.append(notificationResult.getRule().getName());
+			issueSummary.append("']");
 
-				final PolicyViolationIssueProperties properties = new PolicyViolationIssueProperties(
-						notificationResult.getHubProjectName(), notificationResult.getHubProjectVersion(),
-						notificationResult.getHubComponentName(), notificationResult.getHubComponentVersion(),
-						notificationResult.getRule().getName(), issue.getId());
+			final StringBuilder issueDescription = new StringBuilder();
+			issueDescription.append("The Black Duck Hub has detected a ");
+			issueDescription.append(notificationResult.getNotificationType().getDisplayName());
+			issueDescription.append(" on Hub Project '");
+			issueDescription.append(notificationResult.getHubProjectName());
+			issueDescription.append("', component '");
+			issueDescription.append(notificationResult.getHubComponentName());
+			issueDescription.append("' / '");
+			issueDescription.append(notificationResult.getHubComponentVersion());
+			issueDescription.append("'. The rule violated is: '");
+			issueDescription.append(notificationResult.getRule().getName());
+			issueDescription.append("'. Rule overridable : ");
+			issueDescription.append(notificationResult.getRule().getOverridable());
 
-				addIssueProperty(issue.getId(), notificationResult.getUniquePropertyKey(),
-						properties);
-			}
-		} else {
-			if (oldIssue.getStatusObject().getName().equals(DONE_STATUS)) {
-				transitionIssue(oldIssue, REOPEN_STATUS);
-				logger.info("Re-opened the already exisiting issue.");
-				printIssueInfo(oldIssue);
+			final IssueInputParameters issueInputParameters =
+					ticketGenInfo.getIssueService()
+					.newIssueInputParameters();
+			issueInputParameters.setProjectId(notificationResult.getJiraProjectId())
+			.setIssueTypeId(notificationResult.getJiraIssueTypeId()).setSummary(issueSummary.toString())
+			.setReporterId(notificationResult.getJiraUser().getName())
+			.setDescription(issueDescription.toString());
+
+			final Issue oldIssue = findIssue(notificationResult);
+			if (oldIssue == null) {
+				final Issue issue = createIssue(issueInputParameters);
+				if (issue != null) {
+					if (firstIssue == null) {
+						firstIssue = issue;
+					} else {
+						// Links the first issue to all following issues
+						linkIssues(firstIssue, issue);
+					}
+
+					logger.info("Created new Issue.");
+					printIssueInfo(issue);
+
+					final PolicyViolationIssueProperties properties = new PolicyViolationIssueProperties(
+							notificationResult.getHubProjectName(), notificationResult.getHubProjectVersion(),
+							notificationResult.getHubComponentName(), notificationResult.getHubComponentVersion(),
+							notificationResult.getRule().getName(), issue.getId());
+
+					addIssueProperty(issue.getId(), notificationResult.getUniquePropertyKey(),
+							properties);
+				}
 			} else {
-				logger.info("This issue already exists.");
-				printIssueInfo(oldIssue);
+				if (oldIssue.getStatusObject().getName().equals(DONE_STATUS)) {
+					transitionIssue(oldIssue, REOPEN_STATUS);
+					logger.info("Re-opened the already exisiting issue.");
+					printIssueInfo(oldIssue);
+				} else {
+					logger.info("This issue already exists.");
+					printIssueInfo(oldIssue);
+				}
 			}
 		}
 	}
@@ -159,6 +186,7 @@ public class TicketGenerator {
 			}
 		} else {
 			logger.info("Could not find an existing issue to close for this override.");
+			logger.debug("Jira Project : " + notificationResult.getJiraProjectName());
 			logger.debug("Hub Project Name : " + notificationResult.getHubProjectName());
 			logger.debug("Hub Project Version : " + notificationResult.getHubProjectVersion());
 			logger.debug("Hub Component Name : " + notificationResult.getHubComponentName());
@@ -268,6 +296,46 @@ public class TicketGenerator {
 			}
 		}
 		return null;
+	}
+
+	private void linkIssues(final Issue existingIssue, final Issue relatedIssueToLink){
+		final IssueLinkTypeManager linkTypeManager = ticketGenInfo.getLinkTypeManager();
+
+		final Collection<IssueLinkType> linkTypes = linkTypeManager.getIssueLinkTypesByName(LINK_RELATES);
+		final IssueLinkType relateLinkType = linkTypes.iterator().next();
+		if (relateLinkType == null) {
+			logger.warn("Could not find the 'Relates' link type. Will not link the related issues.");
+			return;
+		}
+		final IssueLinkManager linkManager = ticketGenInfo.getLinkManager();
+		try {
+			invokeCreateLinkMethod(linkManager, existingIssue, relatedIssueToLink, relateLinkType);
+		} catch (final CreateException e) {
+			logger.error(e);
+		}
+	}
+
+	private void invokeCreateLinkMethod(final IssueLinkManager linkManager, final Issue existingIssue,
+			final Issue relatedIssueToLink, final IssueLinkType relateLinkType) throws CreateException {
+		Method createLink = null;
+		try {
+			createLink = linkManager.getClass().getMethod("createIssueLink", Long.class, Long.class,
+					Long.class,
+					Long.class, User.class);
+			createLink.invoke(linkManager, existingIssue.getId(), relatedIssueToLink.getId(), relateLinkType.getId(),
+					null, ticketGenInfo.getJiraUser().getDirectoryUser());
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+				| SecurityException e) {
+			try {
+				createLink = linkManager.getClass().getMethod("createIssueLink", Long.class, Long.class,
+						Long.class, Long.class, ApplicationUser.class);
+				createLink.invoke(linkManager, existingIssue.getId(), relatedIssueToLink.getId(),
+						relateLinkType.getId(), null, ticketGenInfo.getJiraUser());
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+					| NoSuchMethodException | SecurityException e1) {
+
+			}
+		}
 	}
 
 	private Issue updateIssue(final Issue issueToUpdate, final IssueInputParameters issueInputParameters) {

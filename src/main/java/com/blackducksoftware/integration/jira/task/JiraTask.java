@@ -8,6 +8,8 @@ import org.apache.log4j.Logger;
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.properties.IssuePropertyService;
 import com.atlassian.jira.entity.property.JsonEntityPropertyManager;
+import com.atlassian.jira.issue.link.IssueLinkManager;
+import com.atlassian.jira.issue.link.IssueLinkTypeManager;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.util.UserManager;
@@ -49,6 +51,9 @@ public class JiraTask implements PluginJob {
 		final WorkflowManager workflowManager = (WorkflowManager) jobDataMap.get(HubMonitor.KEY_WORKFLOW_MANAGER);
 		final JsonEntityPropertyManager jsonEntityPropertyManager = (JsonEntityPropertyManager) jobDataMap
 				.get(HubMonitor.KEY_JSON_ENTITY_PROPERTY_MANAGER);
+		final IssueLinkManager linkManager = (IssueLinkManager) jobDataMap.get(HubMonitor.KEY_ISSUE_LINK_MANAGER);
+		final IssueLinkTypeManager linkTypeManager = (IssueLinkTypeManager) jobDataMap
+				.get(HubMonitor.KEY_ISSUE_LINK_TYPE_MANAGER);
 
 		final PluginSettings settings = (PluginSettings) jobDataMap.get(HubMonitor.KEY_SETTINGS);
 		final String hubUrl = getStringValue(settings, HubConfigKeys.CONFIG_HUB_URL);
@@ -103,7 +108,7 @@ public class JiraTask implements PluginJob {
 		final HubJiraTask processor = new HubJiraTask(serverConfig,
 				intervalString, jiraIssueTypeName, installDateString, lastRunDateString, projectMappingJson,
 				policyRulesJson, jiraProjectManager, jiraUserManager, jiraIssueService, authContext, propertyService,
-				jiraUser, workflowManager, jsonEntityPropertyManager);
+				jiraUser, workflowManager, jsonEntityPropertyManager, linkManager, linkTypeManager);
 		final String runDateString = processor.execute();
 		if (runDateString != null) {
 			settings.put(HubJiraConfigKeys.HUB_CONFIG_LAST_RUN_DATE, runDateString);

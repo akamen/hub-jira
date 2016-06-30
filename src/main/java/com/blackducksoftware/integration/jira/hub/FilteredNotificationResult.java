@@ -104,6 +104,21 @@ public class FilteredNotificationResult {
 		return notificationType;
 	}
 
+	public String getUniqueMapKey() {
+		final StringBuilder keyBuilder = new StringBuilder();
+		keyBuilder.append(getJiraProjectId().toString());
+		keyBuilder.append(".");
+		keyBuilder.append(getHubProjectVersionId().toString());
+		keyBuilder.append(".");
+		keyBuilder.append(getHubComponentId().toString());
+		keyBuilder.append(".");
+		if (getHubComponentVersionId() != null) {
+			keyBuilder.append(getHubComponentVersionId().toString());
+			keyBuilder.append(".");
+		}
+		return keyBuilder.toString();
+	}
+
 	public String getUniquePropertyKey() {
 		final StringBuilder keyBuilder = new StringBuilder();
 		keyBuilder.append(getJiraProjectId().toString());

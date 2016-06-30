@@ -11,6 +11,8 @@ import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.properties.IssuePropertyService;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.entity.property.JsonEntityPropertyManager;
+import com.atlassian.jira.issue.link.IssueLinkManager;
+import com.atlassian.jira.issue.link.IssueLinkTypeManager;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.util.UserManager;
@@ -37,6 +39,8 @@ public class HubMonitor implements NotificationMonitor, LifecycleAware {
 	public static final String KEY_WORKFLOW_MANAGER = HubMonitor.class.getName() + ":workflowManager";
 	public static final String KEY_JSON_ENTITY_PROPERTY_MANAGER = HubMonitor.class.getName()
 			+ ":jsonEntityPropertyManager";
+	public static final String KEY_ISSUE_LINK_MANAGER = HubMonitor.class.getName() + ":linkManager";
+	public static final String KEY_ISSUE_LINK_TYPE_MANAGER = HubMonitor.class.getName() + ":linkTypeManager";
 
 	private static final String JOB_NAME = HubMonitor.class.getName() + ":job";
 
@@ -93,6 +97,12 @@ public class HubMonitor implements NotificationMonitor, LifecycleAware {
 				.getComponentOfType(JsonEntityPropertyManager.class);
 		logger.debug("jsonEntityPropertyManager: " + jsonEntityPropertyManager);
 
+		final IssueLinkManager linkManager = ComponentAccessor.getIssueLinkManager();
+		logger.debug("linkManager: " + linkManager);
+
+		final IssueLinkTypeManager linkTypeManager = ComponentAccessor.getComponentOfType(IssueLinkTypeManager.class);
+		logger.debug("linkTypeManager: " + linkTypeManager);
+
 		final long actualInterval = getIntervalMillisec();
 
 		this.serverName = serverName;
@@ -107,9 +117,11 @@ public class HubMonitor implements NotificationMonitor, LifecycleAware {
 				put(KEY_PROJECT_MANAGER, projectManager);
 				put(KEY_USER_MANAGER, userManager);
 				put(KEY_AUTH_CONTEXT, authContext);
-						put(KEY_PROPERTY_SERVICE, propertyService);
+				put(KEY_PROPERTY_SERVICE, propertyService);
 				put(KEY_WORKFLOW_MANAGER, workflowManager);
 				put(KEY_JSON_ENTITY_PROPERTY_MANAGER, jsonEntityPropertyManager);
+						put(KEY_ISSUE_LINK_MANAGER, linkManager);
+						put(KEY_ISSUE_LINK_TYPE_MANAGER, linkTypeManager);
 			}
 		}, // data that needs to be passed to the job
 				new Date(), // the time the job is to start

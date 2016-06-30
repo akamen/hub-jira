@@ -3,6 +3,8 @@ package com.blackducksoftware.integration.jira.hub;
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.properties.IssuePropertyService;
 import com.atlassian.jira.entity.property.JsonEntityPropertyManager;
+import com.atlassian.jira.issue.link.IssueLinkManager;
+import com.atlassian.jira.issue.link.IssueLinkTypeManager;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
@@ -16,15 +18,16 @@ public class TicketGeneratorInfo {
 	private final String jiraIssueTypeName;
 	private final JiraAuthenticationContext authContext;
 	private final IssuePropertyService propertyService;
-
 	private final WorkflowManager workflowManager;
-
 	private final JsonEntityPropertyManager jsonEntityPropertyManager;
+	private final IssueLinkManager linkManager;
+	private final IssueLinkTypeManager linkTypeManager;
 
 	public TicketGeneratorInfo(final ProjectManager jiraProjectManager, final IssueService issueService,
 			final ApplicationUser jiraUser, final String jiraIssueTypeName, final JiraAuthenticationContext authContext,
-			final IssuePropertyService propertyService, 
-			final WorkflowManager workflowManager, final JsonEntityPropertyManager jsonEntityPropertyManager) {
+			final IssuePropertyService propertyService,
+			final WorkflowManager workflowManager, final JsonEntityPropertyManager jsonEntityPropertyManager,
+			final IssueLinkManager linkManager, final IssueLinkTypeManager linkTypeManager) {
 		this.jiraProjectManager = jiraProjectManager;
 		this.issueService = issueService;
 		this.jiraUser = jiraUser;
@@ -33,6 +36,8 @@ public class TicketGeneratorInfo {
 		this.propertyService = propertyService;
 		this.workflowManager = workflowManager;
 		this.jsonEntityPropertyManager = jsonEntityPropertyManager;
+		this.linkManager = linkManager;
+		this.linkTypeManager = linkTypeManager;
 	}
 
 	public ProjectManager getJiraProjectManager() {
@@ -60,6 +65,14 @@ public class TicketGeneratorInfo {
 
 	public JsonEntityPropertyManager getJsonEntityPropertyManager() {
 		return jsonEntityPropertyManager;
+	}
+
+	public IssueLinkManager getLinkManager() {
+		return linkManager;
+	}
+
+	public IssueLinkTypeManager getLinkTypeManager() {
+		return linkTypeManager;
 	}
 
 }

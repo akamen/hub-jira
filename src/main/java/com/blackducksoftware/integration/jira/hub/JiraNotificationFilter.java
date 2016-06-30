@@ -155,7 +155,7 @@ public class JiraNotificationFilter {
 
 				logger.debug("BomComponentVersionPolicyStatus: " + bomComponentVersionPolicyStatus);
 				final List<String> ruleUrls = bomComponentVersionPolicyStatus
-						.getLinks(PolicyRule.POLICY_RULES_URL_IDENTIFIER);
+						.getLinks(BomComponentVersionPolicyStatus.POLICY_RULE_LINK);
 
 				for (final String ruleUrl : ruleUrls) {
 					if (isRuleMatch(ruleUrl)) {
@@ -191,7 +191,7 @@ public class JiraNotificationFilter {
 								jiraProject.getProjectId(), jiraProject.getProjectName(), notificationType);
 
 						if (result.getNotificationType() == NotificationType.POLICY_VIOLATION) {
-							notifResults.addPolicyViolationResult(result);
+							notifResults.addPolicyViolationResult(result.getUniqueMapKey(), result);
 						} else if (result.getNotificationType() == NotificationType.POLICY_OVERRIDE) {
 							notifResults.addPolicyViolationOverrideResult(result);
 						} else if (result.getNotificationType() == NotificationType.VULNERABILITY) {

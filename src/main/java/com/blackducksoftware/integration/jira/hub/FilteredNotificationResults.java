@@ -1,15 +1,18 @@
 package com.blackducksoftware.integration.jira.hub;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class FilteredNotificationResults {
 
-	private final List<FilteredNotificationResult> policyViolationResults = new ArrayList<>();
+	private final Map<String, List<FilteredNotificationResult>> policyViolationResults = new HashMap<>();
 	private final List<FilteredNotificationResult> policyViolationOverrideResults = new ArrayList<>();
 	private final List<FilteredNotificationResult> vulnerabilityResults = new ArrayList<>();
 
-	public List<FilteredNotificationResult> getPolicyViolationResults() {
+	public Map<String, List<FilteredNotificationResult>> getPolicyViolationResults() {
 		return policyViolationResults;
 	}
 
@@ -21,8 +24,14 @@ public class FilteredNotificationResults {
 		return vulnerabilityResults;
 	}
 
-	public void addPolicyViolationResult(final FilteredNotificationResult notificationResult) {
-		policyViolationResults.add(notificationResult);
+	public void addPolicyViolationResult(final String key, final FilteredNotificationResult notificationResult) {
+		if (policyViolationResults.get(key) != null) {
+			policyViolationResults.get(key).add(notificationResult);
+		} else {
+			final List<FilteredNotificationResult> results = new ArrayList<>();
+			results.add(notificationResult);
+			policyViolationResults.put(key, results);
+		}
 	}
 
 	public void addPolicyViolationOverrideResult(final FilteredNotificationResult notificationResult) {
@@ -34,7 +43,11 @@ public class FilteredNotificationResults {
 	}
 
 	public void addAllResults(final FilteredNotificationResults results) {
-		policyViolationResults.addAll(results.getPolicyViolationResults());
+		for (final Entry<String, List<FilteredNotificationResult>> entry : results.getPolicyViolationResults().entrySet()) {
+			for (final FilteredNotificationResult violationResult : entry.getValue()) {
+				addPolicyViolationResult(entry.getKey(), violationResult);
+			}
+		}
 		policyViolationOverrideResults.addAll(results.getPolicyViolationOverrideResults());
 		vulnerabilityResults.addAll(results.getVulnerabilityResults());
 	}
