@@ -7,28 +7,26 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
+import com.blackducksoftware.integration.hub.api.component.BomComponentVersionPolicyStatus;
+import com.blackducksoftware.integration.hub.api.component.ComponentVersionStatus;
+import com.blackducksoftware.integration.hub.api.notification.NotificationType;
+import com.blackducksoftware.integration.hub.api.policy.PolicyRule;
+import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.exception.MissingUUIDException;
 import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
-import com.blackducksoftware.integration.hub.policy.api.PolicyRule;
-import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
+import com.blackducksoftware.integration.hub.util.HubUrlParser;
 import com.blackducksoftware.integration.jira.HubJiraLogger;
 import com.blackducksoftware.integration.jira.config.HubProjectMapping;
 import com.blackducksoftware.integration.jira.config.JiraProject;
-import com.blackducksoftware.integration.jira.hub.model.component.BomComponentVersionPolicyStatus;
-import com.blackducksoftware.integration.jira.hub.model.component.ComponentVersionStatus;
-import com.blackducksoftware.integration.jira.hub.model.notification.NotificationType;
 
 public class PolicyNotificationFilter extends NotificationFilter {
-
 
 	private final HubJiraLogger logger = new HubJiraLogger(Logger.getLogger(this.getClass().getName()));
 	private final List<String> linksOfRulesToMonitor;
 	private final HubNotificationService hubNotificationService;
 
-
-	public PolicyNotificationFilter(final Set<HubProjectMapping> mappings,
-			final TicketGeneratorInfo ticketGenInfo, final List<String> linksOfRulesToMonitor,
-			final HubNotificationService hubNotificationService) {
+	public PolicyNotificationFilter(final Set<HubProjectMapping> mappings, final TicketGeneratorInfo ticketGenInfo,
+			final List<String> linksOfRulesToMonitor, final HubNotificationService hubNotificationService) {
 		super(mappings, ticketGenInfo);
 		this.linksOfRulesToMonitor = linksOfRulesToMonitor;
 		this.hubNotificationService = hubNotificationService;
@@ -38,8 +36,7 @@ public class PolicyNotificationFilter extends NotificationFilter {
 	public FilteredNotificationResults handleNotificationPerJiraProject(final NotificationType notificationType,
 			final String projectName, final String projectVersionName,
 			final List<ComponentVersionStatus> compVerStatuses, final ReleaseItem notifHubProjectReleaseItem,
-			final JiraProject jiraProject)
-					throws UnexpectedHubResponseException, HubNotificationServiceException {
+			final JiraProject jiraProject) throws UnexpectedHubResponseException, HubNotificationServiceException {
 		final FilteredNotificationResults notifResults = new FilteredNotificationResults();
 		if ((linksOfRulesToMonitor == null) || (linksOfRulesToMonitor.size() == 0)) {
 			logger.warn("No rules-to-monitor provided, skipping policy notifications.");
@@ -54,8 +51,7 @@ public class PolicyNotificationFilter extends NotificationFilter {
 				continue;
 			}
 			final String componentVersionName = hubNotificationService
-					.getComponentVersion(
-							compVerStatus.getComponentVersionLink()).getVersionName();
+					.getComponentVersion(compVerStatus.getComponentVersionLink()).getVersionName();
 
 			final String policyStatusUrl = compVerStatus.getBomComponentVersionPolicyStatusLink();
 
@@ -63,9 +59,9 @@ public class PolicyNotificationFilter extends NotificationFilter {
 					.getPolicyStatus(policyStatusUrl);
 
 			logger.debug("BomComponentVersionPolicyStatus: " + bomComponentVersionPolicyStatus);
-			final List<String> monitoredUrls = getMonitoredRules(bomComponentVersionPolicyStatus
-					.getLinks(BomComponentVersionPolicyStatus.POLICY_RULE_URL));
-			if(monitoredUrls == null || monitoredUrls.isEmpty()){
+			final List<String> monitoredUrls = getMonitoredRules(
+					bomComponentVersionPolicyStatus.getLinks(BomComponentVersionPolicyStatus.POLICY_RULE_URL));
+			if (monitoredUrls == null || monitoredUrls.isEmpty()) {
 				logger.warn(
 						"No configured policy violations matching this notification found; skipping this notification");
 				continue;
@@ -85,23 +81,26 @@ public class PolicyNotificationFilter extends NotificationFilter {
 				UUID componentVersionId;
 				UUID ruleId;
 				try {
-					versionId = notifHubProjectReleaseItem.getVersionId();
+					versionId = HubUrlParser.getUUIDFromHubItem(ReleaseItem.VERSION_URL_IDENTIFIER,
+							notifHubProjectReleaseItem);
+					componentId = HubUrlParser.getUUIDFromURLString(ComponentVersionStatus.COMPONENT_URL_IDENTIFIER,
+							compVerStatus.getComponentVersionLink());
 
-					componentId = compVerStatus.getComponentId();
+					componentVersionId = HubUrlParser.getUUIDFromURLString(
+							ComponentVersionStatus.COMPONENT_VERSION_URL_IDENTIFIER,
+							compVerStatus.getComponentVersionLink());
 
-					componentVersionId = compVerStatus.getComponentVersionId();
-
-					ruleId = rule.getPolicyRuleId();
+					ruleId = HubUrlParser.getUUIDFromHubItem(PolicyRule.POLICY_RULES_URL_IDENTIFIER, rule);
 				} catch (final MissingUUIDException e) {
 					logger.error(e);
 					continue;
 				}
 
 				final FilteredNotificationResult result = new FilteredNotificationResult(projectName,
-						projectVersionName, compVerStatus.getComponentName(), componentVersionName,
-						rule, versionId, componentId, componentVersionId, ruleId,
-						getTicketGenInfo().getJiraUser(), jiraProject.getIssueTypeId(),
-						jiraProject.getProjectId(), jiraProject.getProjectName(), notificationType);
+						projectVersionName, compVerStatus.getComponentName(), componentVersionName, rule, versionId,
+						componentId, componentVersionId, ruleId, getTicketGenInfo().getJiraUser(),
+						jiraProject.getIssueTypeId(), jiraProject.getProjectId(), jiraProject.getProjectName(),
+						notificationType);
 
 				if (result.getNotificationType() == NotificationType.POLICY_VIOLATION) {
 					notifResults.addPolicyViolationResult(result);

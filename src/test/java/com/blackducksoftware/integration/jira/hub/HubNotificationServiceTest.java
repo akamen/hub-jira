@@ -43,13 +43,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.api.notification.NotificationItem;
+import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ResourceDoesNotExistException;
 import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
 import com.blackducksoftware.integration.hub.item.HubItemsService;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
-import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
-import com.blackducksoftware.integration.jira.hub.model.notification.NotificationItem;
 
 public class HubNotificationServiceTest {
 
@@ -85,7 +85,7 @@ public class HubNotificationServiceTest {
 
 	@Test
 	public void testFetchNotifications() throws HubNotificationServiceException, URISyntaxException, BDRestException,
-	ParseException, IOException, ResourceDoesNotExistException {
+			ParseException, IOException, ResourceDoesNotExistException {
 
 		final SimpleDateFormat dateFormatter = new SimpleDateFormat(RestConnection.JSON_DATE_FORMAT);
 		dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("Zulu"));
@@ -114,8 +114,8 @@ public class HubNotificationServiceTest {
 	}
 
 	@Test
-	public void testGetProjectUrlFromProjectReleaseUrl() throws HubNotificationServiceException,
-	UnexpectedHubResponseException {
+	public void testGetProjectUrlFromProjectReleaseUrl()
+			throws HubNotificationServiceException, UnexpectedHubResponseException {
 		final String versionUrl = "http://test.projectVersion.url";
 
 		final ReleaseItem releaseItem = hubNotificationService.getProjectReleaseItemFromProjectReleaseUrl(versionUrl);

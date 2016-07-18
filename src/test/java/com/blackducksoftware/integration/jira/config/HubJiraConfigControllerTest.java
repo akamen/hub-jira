@@ -40,11 +40,11 @@ import org.mockito.Mockito;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.blackducksoftware.integration.atlassian.utils.HubConfigKeys;
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.api.meta.MetaInformation;
+import com.blackducksoftware.integration.hub.api.policy.PolicyRule;
+import com.blackducksoftware.integration.hub.api.project.ProjectItem;
 import com.blackducksoftware.integration.hub.encryption.PasswordEncrypter;
 import com.blackducksoftware.integration.hub.item.HubItemsService;
-import com.blackducksoftware.integration.hub.meta.MetaInformation;
-import com.blackducksoftware.integration.hub.policy.api.PolicyRule;
-import com.blackducksoftware.integration.hub.project.api.ProjectItem;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.integration.jira.mocks.HttpServletRequestMock;
 import com.blackducksoftware.integration.jira.mocks.PluginSettingsFactoryMock;
@@ -79,18 +79,15 @@ public class HubJiraConfigControllerTest {
 		final List<PolicyRule> policyRules = new ArrayList<PolicyRule>();
 		final MetaInformation metaInfo1 = new MetaInformation(null, "policyURL1", null);
 		final PolicyRule rule1 = new PolicyRule(metaInfo1, "PolicyRule1", "1TestDescription", null, null, null, null,
-				null,
-				null, null);
+				null, null, null);
 
 		final MetaInformation metaInfo2 = new MetaInformation(null, "policyURL2", null);
 		final PolicyRule rule2 = new PolicyRule(metaInfo2, "PolicyRule2", "2TestDescription", null, null, null, null,
-				null,
-				null, null);
+				null, null, null);
 
 		final MetaInformation metaInfo3 = new MetaInformation(null, "policyURL3", null);
 		final PolicyRule rule3 = new PolicyRule(metaInfo3, "PolicyRule3", "3TestDescription", null, null, null, null,
-				null,
-				null, null);
+				null, null, null);
 
 		policyRules.add(rule1);
 		policyRules.add(rule2);
@@ -475,8 +472,8 @@ public class HubJiraConfigControllerTest {
 		assertNull(config.getHubProjects());
 		assertNull(config.getHubProjectMappings());
 
-		assertEquals(JiraConfigErrors.HUB_SERVER_MISCONFIGURATION
-				+ JiraConfigErrors.CHECK_HUB_SERVER_CONFIGURATION, config.getErrorMessage());
+		assertEquals(JiraConfigErrors.HUB_SERVER_MISCONFIGURATION + JiraConfigErrors.CHECK_HUB_SERVER_CONFIGURATION,
+				config.getErrorMessage());
 		assertNull(config.getIntervalBetweenChecksError());
 		assertEquals(JiraConfigErrors.NO_POLICY_RULES_FOUND_ERROR, config.getPolicyRulesError());
 		assertNull(config.getHubProjectMappingError());
@@ -928,8 +925,8 @@ public class HubJiraConfigControllerTest {
 		assertTrue(config.getHubProjects().isEmpty());
 		assertNull(config.getHubProjectMappings());
 
-		assertEquals(JiraConfigErrors.HUB_SERVER_MISCONFIGURATION
-				+ JiraConfigErrors.CHECK_HUB_SERVER_CONFIGURATION, config.getErrorMessage());
+		assertEquals(JiraConfigErrors.HUB_SERVER_MISCONFIGURATION + JiraConfigErrors.CHECK_HUB_SERVER_CONFIGURATION,
+				config.getErrorMessage());
 		assertNull(config.getIntervalBetweenChecksError());
 		assertNull(config.getPolicyRulesError());
 		assertNull(config.getHubProjectMappingError());
@@ -1147,7 +1144,6 @@ public class HubJiraConfigControllerTest {
 		assertTrue(!config.hasErrors());
 	}
 
-
 	@Test
 	public void testSaveConfigNullUser() {
 		final UserManagerMock managerMock = new UserManagerMock();
@@ -1344,7 +1340,6 @@ public class HubJiraConfigControllerTest {
 		assertTrue(config.hasErrors());
 
 	}
-
 
 	@Test
 	public void testSaveConfigNoUpdate() throws Exception {

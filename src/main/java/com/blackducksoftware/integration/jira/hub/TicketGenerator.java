@@ -29,11 +29,11 @@ import org.apache.log4j.Logger;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueInputParameters;
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.api.notification.NotificationItem;
 import com.blackducksoftware.integration.hub.item.HubItemsService;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
 import com.blackducksoftware.integration.jira.HubJiraLogger;
 import com.blackducksoftware.integration.jira.config.HubProjectMapping;
-import com.blackducksoftware.integration.jira.hub.model.notification.NotificationItem;
 import com.blackducksoftware.integration.jira.hub.property.PolicyViolationIssueProperties;
 
 /**
@@ -51,17 +51,15 @@ public class TicketGenerator {
 	private final HubNotificationService notificationService;
 	private final TicketGeneratorInfo ticketGenInfo;
 
-
 	public TicketGenerator(final RestConnection restConnection, final HubIntRestService hub,
-			final HubItemsService<NotificationItem> hubItemsService,
-			final TicketGeneratorInfo ticketGenInfo) {
+			final HubItemsService<NotificationItem> hubItemsService, final TicketGeneratorInfo ticketGenInfo) {
 		notificationService = new HubNotificationService(restConnection, hub, hubItemsService);
 		this.ticketGenInfo = ticketGenInfo;
 	}
 
 	public int generateTicketsForRecentNotifications(final Set<HubProjectMapping> hubProjectMappings,
-			final List<String> linksOfRulesToMonitor,
-			final NotificationDateRange notificationDateRange) throws HubNotificationServiceException {
+			final List<String> linksOfRulesToMonitor, final NotificationDateRange notificationDateRange)
+			throws HubNotificationServiceException {
 
 		final List<NotificationItem> notifs = notificationService.fetchNotifications(notificationDateRange);
 		for (final NotificationItem notification : notifs) {
@@ -122,13 +120,10 @@ public class TicketGenerator {
 		issueDescription.append("'. Rule overridable : ");
 		issueDescription.append(notificationResult.getRule().getOverridable());
 
-		final IssueInputParameters issueInputParameters =
-				ticketGenInfo.getIssueService()
-				.newIssueInputParameters();
+		final IssueInputParameters issueInputParameters = ticketGenInfo.getIssueService().newIssueInputParameters();
 		issueInputParameters.setProjectId(notificationResult.getJiraProjectId())
-		.setIssueTypeId(notificationResult.getJiraIssueTypeId()).setSummary(issueSummary.toString())
-		.setReporterId(notificationResult.getJiraUser().getName())
-		.setDescription(issueDescription.toString());
+				.setIssueTypeId(notificationResult.getJiraIssueTypeId()).setSummary(issueSummary.toString())
+				.setReporterId(notificationResult.getJiraUser().getName()).setDescription(issueDescription.toString());
 
 		final Issue oldIssue = issueHandler.findIssue(notificationResult);
 		if (oldIssue == null) {
@@ -142,8 +137,7 @@ public class TicketGenerator {
 						notificationResult.getHubComponentName(), notificationResult.getHubComponentVersion(),
 						notificationResult.getRule().getName(), issue.getId());
 
-				issueHandler.addIssueProperty(issue.getId(), notificationResult.getUniquePropertyKey(),
-						properties);
+				issueHandler.addIssueProperty(issue.getId(), notificationResult.getUniquePropertyKey(), properties);
 			}
 		} else {
 			if (oldIssue.getStatusObject().getName().equals(DONE_STATUS)) {

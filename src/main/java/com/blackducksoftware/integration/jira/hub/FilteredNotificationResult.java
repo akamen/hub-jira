@@ -24,8 +24,8 @@ package com.blackducksoftware.integration.jira.hub;
 import java.util.UUID;
 
 import com.atlassian.jira.user.ApplicationUser;
-import com.blackducksoftware.integration.hub.policy.api.PolicyRule;
-import com.blackducksoftware.integration.jira.hub.model.notification.NotificationType;
+import com.blackducksoftware.integration.hub.api.notification.NotificationType;
+import com.blackducksoftware.integration.hub.api.policy.PolicyRule;
 
 public class FilteredNotificationResult {
 
@@ -49,10 +49,9 @@ public class FilteredNotificationResult {
 
 	public FilteredNotificationResult(final String hubProjectName, final String hubProjectVersion,
 			final String hubComponentName, final String hubComponentVersion, final PolicyRule rule,
-			final UUID hubProjectVersionId, final UUID hubComponentId,
-			final UUID hubComponentVersionId, final UUID ruleId, final ApplicationUser jiraUser,
-			final String jiraIssueTypeId, final Long jiraProjectId, final String jiraProjectName,
-			final NotificationType notificationType) {
+			final UUID hubProjectVersionId, final UUID hubComponentId, final UUID hubComponentVersionId,
+			final UUID ruleId, final ApplicationUser jiraUser, final String jiraIssueTypeId, final Long jiraProjectId,
+			final String jiraProjectName, final NotificationType notificationType) {
 		this.hubProjectName = hubProjectName;
 		this.hubProjectVersion = hubProjectVersion;
 		this.hubComponentName = hubComponentName;

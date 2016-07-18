@@ -33,17 +33,17 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.api.component.BomComponentVersionPolicyStatus;
+import com.blackducksoftware.integration.hub.api.component.ComponentVersion;
+import com.blackducksoftware.integration.hub.api.notification.NotificationItem;
+import com.blackducksoftware.integration.hub.api.policy.PolicyRule;
+import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.ResourceDoesNotExistException;
 import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
 import com.blackducksoftware.integration.hub.item.HubItemsService;
-import com.blackducksoftware.integration.hub.policy.api.PolicyRule;
 import com.blackducksoftware.integration.hub.rest.RestConnection;
-import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.blackducksoftware.integration.jira.HubJiraLogger;
-import com.blackducksoftware.integration.jira.hub.model.component.BomComponentVersionPolicyStatus;
-import com.blackducksoftware.integration.jira.hub.model.component.ComponentVersion;
-import com.blackducksoftware.integration.jira.hub.model.notification.NotificationItem;
 
 /**
  * Hub Notification get methods. TODO: Move to hub-common.
@@ -77,7 +77,6 @@ public class HubNotificationService {
 		dateFormatter.setTimeZone(java.util.TimeZone.getTimeZone("Zulu"));
 	}
 
-
 	public String getHubVersion() throws HubNotificationServiceException {
 		try {
 			return hub.getHubVersion();
@@ -89,7 +88,8 @@ public class HubNotificationService {
 	public List<NotificationItem> fetchNotifications(final NotificationDateRange dateRange)
 			throws HubNotificationServiceException {
 
-		final int limit = 1000; // TODO may need chunking and maybe retry logic to
+		final int limit = 1000; // TODO may need chunking and maybe retry logic
+								// to
 		// handle large sets
 
 		final String startDateString = dateFormatter.format(dateRange.getStartDate());
@@ -118,11 +118,11 @@ public class HubNotificationService {
 			throws HubNotificationServiceException {
 		BomComponentVersionPolicyStatus bomComponentVersionPolicyStatus;
 		try {
-			bomComponentVersionPolicyStatus = restConnection.httpGetFromAbsoluteUrl(
-					BomComponentVersionPolicyStatus.class, policyStatusUrl);
+			bomComponentVersionPolicyStatus = restConnection
+					.httpGetFromAbsoluteUrl(BomComponentVersionPolicyStatus.class, policyStatusUrl);
 		} catch (ResourceDoesNotExistException | URISyntaxException | IOException | BDRestException e) {
-			throw new HubNotificationServiceException("Error getting a BomComponentVersionPolicyStatus: "
-					+ e.getMessage(), e);
+			throw new HubNotificationServiceException(
+					"Error getting a BomComponentVersionPolicyStatus: " + e.getMessage(), e);
 		}
 		return bomComponentVersionPolicyStatus;
 	}
@@ -143,15 +143,14 @@ public class HubNotificationService {
 		try {
 			componentVersion = restConnection.httpGetFromAbsoluteUrl(ComponentVersion.class, componentVersionUrl);
 		} catch (ResourceDoesNotExistException | URISyntaxException | IOException | BDRestException e) {
-			throw new HubNotificationServiceException("Error getting component version from: " + componentVersionUrl
-					+ ": " + e.getMessage(), e);
+			throw new HubNotificationServiceException(
+					"Error getting component version from: " + componentVersionUrl + ": " + e.getMessage(), e);
 		}
 		return componentVersion;
 	}
 
 	public ReleaseItem getProjectReleaseItemFromProjectReleaseUrl(final String versionUrl)
-			throws HubNotificationServiceException,
-			UnexpectedHubResponseException {
+			throws HubNotificationServiceException, UnexpectedHubResponseException {
 		ReleaseItem projectVersion;
 		try {
 			projectVersion = hub.getProjectVersion(versionUrl);

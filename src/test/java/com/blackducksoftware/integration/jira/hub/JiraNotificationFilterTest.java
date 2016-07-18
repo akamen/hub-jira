@@ -31,16 +31,16 @@ import org.junit.BeforeClass;
 import org.mockito.Mockito;
 
 import com.atlassian.jira.project.ProjectManager;
+import com.blackducksoftware.integration.hub.api.component.BomComponentVersionPolicyStatus;
+import com.blackducksoftware.integration.hub.api.component.ComponentVersion;
+import com.blackducksoftware.integration.hub.api.meta.MetaInformation;
+import com.blackducksoftware.integration.hub.api.meta.MetaLink;
+import com.blackducksoftware.integration.hub.api.policy.PolicyRule;
+import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
-import com.blackducksoftware.integration.hub.meta.MetaInformation;
-import com.blackducksoftware.integration.hub.meta.MetaLink;
-import com.blackducksoftware.integration.hub.policy.api.PolicyRule;
-import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.blackducksoftware.integration.jira.config.HubProject;
 import com.blackducksoftware.integration.jira.config.HubProjectMapping;
 import com.blackducksoftware.integration.jira.config.JiraProject;
-import com.blackducksoftware.integration.jira.hub.model.component.BomComponentVersionPolicyStatus;
-import com.blackducksoftware.integration.jira.hub.model.component.ComponentVersion;
 import com.blackducksoftware.integration.jira.mocks.ProjectManagerMock;
 
 public class JiraNotificationFilterTest {
@@ -293,7 +293,7 @@ public class JiraNotificationFilterTest {
 			final ComponentVersion componentVersion = new ComponentVersion(meta);
 			componentVersion.setVersionName(VERSION_NAME_PREFIX + i);
 			Mockito.when(mockHubNotificationService.getComponentVersion(COMPONENT_VERSION_LINK_PREFIX + i))
-			.thenReturn(componentVersion);
+					.thenReturn(componentVersion);
 
 			links = new ArrayList<>();
 			for (int j = 0; j < 3; j++) {
@@ -307,7 +307,7 @@ public class JiraNotificationFilterTest {
 			final BomComponentVersionPolicyStatus status = new BomComponentVersionPolicyStatus(meta);
 			Mockito.when(
 					mockHubNotificationService.getPolicyStatus(BOM_COMPONENT_VERSION_POLICY_STATUS_LINK_PREFIX + i))
-			.thenReturn(status);
+					.thenReturn(status);
 		}
 		return mockHubNotificationService;
 	}

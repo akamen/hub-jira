@@ -27,16 +27,16 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.blackducksoftware.integration.hub.api.component.ComponentVersionStatus;
+import com.blackducksoftware.integration.hub.api.notification.NotificationItem;
+import com.blackducksoftware.integration.hub.api.notification.NotificationType;
+import com.blackducksoftware.integration.hub.api.notification.PolicyOverrideNotificationItem;
+import com.blackducksoftware.integration.hub.api.notification.RuleViolationNotificationItem;
+import com.blackducksoftware.integration.hub.api.notification.VulnerabilityNotificationItem;
+import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
-import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.blackducksoftware.integration.jira.HubJiraLogger;
 import com.blackducksoftware.integration.jira.config.HubProjectMapping;
-import com.blackducksoftware.integration.jira.hub.model.component.ComponentVersionStatus;
-import com.blackducksoftware.integration.jira.hub.model.notification.NotificationItem;
-import com.blackducksoftware.integration.jira.hub.model.notification.NotificationType;
-import com.blackducksoftware.integration.jira.hub.model.notification.PolicyOverrideNotificationItem;
-import com.blackducksoftware.integration.jira.hub.model.notification.RuleViolationNotificationItem;
-import com.blackducksoftware.integration.jira.hub.model.notification.VulnerabilityNotificationItem;
 
 public class JiraNotificationProcessor {
 	private final HubJiraLogger logger = new HubJiraLogger(Logger.getLogger(this.getClass().getName()));
@@ -60,7 +60,7 @@ public class JiraNotificationProcessor {
 		final FilteredNotificationResults allResults = new FilteredNotificationResults();
 
 		logger.debug("JiraNotificationFilter.extractJiraReadyNotifications(): Sifting through " + notifications.size()
-		+ " notifications");
+				+ " notifications");
 		for (final NotificationItem notif : notifications) {
 			logger.debug("Notification: " + notif);
 
@@ -93,15 +93,15 @@ public class JiraNotificationProcessor {
 				notificationType = NotificationType.POLICY_VIOLATION;
 				compVerStatuses = ruleViolationNotif.getContent().getComponentVersionStatuses();
 				projectName = ruleViolationNotif.getContent().getProjectName();
-				notifHubProjectReleaseItem = hubNotificationService
-						.getProjectReleaseItemFromProjectReleaseUrl(ruleViolationNotif.getContent().getProjectVersionLink());
+				notifHubProjectReleaseItem = hubNotificationService.getProjectReleaseItemFromProjectReleaseUrl(
+						ruleViolationNotif.getContent().getProjectVersionLink());
 				projectVersionName = notifHubProjectReleaseItem.getVersionName();
 			} catch (final HubNotificationServiceException e) {
 				logger.error(e);
 				return null;
 			}
-			filter = new PolicyNotificationFilter(mappings,
-					ticketGenInfo, linksOfRulesToMonitor, hubNotificationService);
+			filter = new PolicyNotificationFilter(mappings, ticketGenInfo, linksOfRulesToMonitor,
+					hubNotificationService);
 		} else if (notif instanceof PolicyOverrideNotificationItem) {
 			try {
 				final PolicyOverrideNotificationItem ruleViolationNotif = (PolicyOverrideNotificationItem) notif;
@@ -125,8 +125,8 @@ public class JiraNotificationProcessor {
 				logger.error(e);
 				return null;
 			}
-			filter = new PolicyNotificationFilter(mappings,
-					ticketGenInfo, linksOfRulesToMonitor, hubNotificationService);
+			filter = new PolicyNotificationFilter(mappings, ticketGenInfo, linksOfRulesToMonitor,
+					hubNotificationService);
 		} else if (notif instanceof VulnerabilityNotificationItem) {
 			notificationType = NotificationType.VULNERABILITY;
 			return null; // TODO

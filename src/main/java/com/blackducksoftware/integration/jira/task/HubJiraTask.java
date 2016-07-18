@@ -41,6 +41,10 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.workflow.WorkflowManager;
 import com.blackducksoftware.integration.hub.HubIntRestService;
+import com.blackducksoftware.integration.hub.api.notification.NotificationItem;
+import com.blackducksoftware.integration.hub.api.notification.PolicyOverrideNotificationItem;
+import com.blackducksoftware.integration.hub.api.notification.RuleViolationNotificationItem;
+import com.blackducksoftware.integration.hub.api.notification.VulnerabilityNotificationItem;
 import com.blackducksoftware.integration.hub.exception.BDRestException;
 import com.blackducksoftware.integration.hub.exception.EncryptionException;
 import com.blackducksoftware.integration.hub.global.HubServerConfig;
@@ -54,10 +58,6 @@ import com.blackducksoftware.integration.jira.hub.HubNotificationServiceExceptio
 import com.blackducksoftware.integration.jira.hub.NotificationDateRange;
 import com.blackducksoftware.integration.jira.hub.TicketGenerator;
 import com.blackducksoftware.integration.jira.hub.TicketGeneratorInfo;
-import com.blackducksoftware.integration.jira.hub.model.notification.NotificationItem;
-import com.blackducksoftware.integration.jira.hub.model.notification.PolicyOverrideNotificationItem;
-import com.blackducksoftware.integration.jira.hub.model.notification.RuleViolationNotificationItem;
-import com.blackducksoftware.integration.jira.hub.model.notification.VulnerabilityNotificationItem;
 import com.google.gson.reflect.TypeToken;
 
 public class HubJiraTask {
@@ -84,14 +84,11 @@ public class HubJiraTask {
 	private final SimpleDateFormat dateFormatter;
 
 	public HubJiraTask(final HubServerConfig serverConfig, final String intervalString, final String jiraIssueTypeName,
-			final String installDateString,
-			final String lastRunDateString,
-			final String projectMappingJson,
-			final String policyRulesJson,
-			final ProjectManager jiraProjectManager, final UserManager jiraUserManager,
+			final String installDateString, final String lastRunDateString, final String projectMappingJson,
+			final String policyRulesJson, final ProjectManager jiraProjectManager, final UserManager jiraUserManager,
 			final IssueService jiraIssueService, final JiraAuthenticationContext authContext,
-			final IssuePropertyService propertyService, final String jiraUser,
-			final WorkflowManager workflowManager, final JsonEntityPropertyManager jsonEntityPropertyManager) {
+			final IssuePropertyService propertyService, final String jiraUser, final WorkflowManager workflowManager,
+			final JsonEntityPropertyManager jsonEntityPropertyManager) {
 
 		this.serverConfig = serverConfig;
 		this.intervalString = intervalString;
@@ -138,7 +135,8 @@ public class HubJiraTask {
 		try {
 			startDate = deriveStartDate(installDateString, lastRunDateString);
 		} catch (final ParseException e) {
-			logger.info("This is the first run, but the plugin install date cannot be parsed; Not doing anything this time, will record collection start time and start collecting notifications next time");
+			logger.info(
+					"This is the first run, but the plugin install date cannot be parsed; Not doing anything this time, will record collection start time and start collecting notifications next time");
 			return runDateString;
 		}
 
@@ -148,8 +146,8 @@ public class HubJiraTask {
 			final HubItemsService<NotificationItem> hubItemsService = initHubItemsService(restConnection);
 
 			final TicketGeneratorInfo ticketServices = initTicketGeneratorInfo(jiraProjectManager, jiraUser,
-					jiraIssueTypeName, jiraIssueService, authContext, propertyService,
-					workflowManager, jsonEntityPropertyManager);
+					jiraIssueTypeName, jiraIssueService, authContext, propertyService, workflowManager,
+					jsonEntityPropertyManager);
 
 			if (ticketServices == null) {
 				logger.info("Missing information to generate tickets.");
@@ -157,23 +155,19 @@ public class HubJiraTask {
 				return null;
 			}
 
-			final TicketGenerator ticketGenerator = initTicketGenerator(ticketServices,
-					restConnection,
-					hub,
+			final TicketGenerator ticketGenerator = initTicketGenerator(ticketServices, restConnection, hub,
 					hubItemsService);
 
 			logger.info("Getting Hub notifications from " + startDate + " to " + runDate);
 
-			final NotificationDateRange notificationDateRange = new NotificationDateRange(startDate,
-					runDate);
+			final NotificationDateRange notificationDateRange = new NotificationDateRange(startDate, runDate);
 
 			final List<String> linksOfRulesToMonitor = getRuleUrls(config);
 
 			// Generate Jira Issues based on recent notifications
 
-			ticketGenerator
-			.generateTicketsForRecentNotifications(config.getHubProjectMappings(),
-					linksOfRulesToMonitor, notificationDateRange);
+			ticketGenerator.generateTicketsForRecentNotifications(config.getHubProjectMappings(), linksOfRulesToMonitor,
+					notificationDateRange);
 		} catch (final BDRestException | IllegalArgumentException | EncryptionException | ParseException
 				| HubNotificationServiceException | URISyntaxException e) {
 			logger.error("Error processing Hub notifications or generating JIRA issues: " + e.getMessage(), e);
@@ -201,10 +195,9 @@ public class HubJiraTask {
 		}
 	}
 
-	private TicketGeneratorInfo initTicketGeneratorInfo(final ProjectManager projectManager,
-			final String jiraUser, final String issueTypeName, final IssueService issueService,
-			final JiraAuthenticationContext authContext, final IssuePropertyService propertyService,
-			final WorkflowManager workflowManager,
+	private TicketGeneratorInfo initTicketGeneratorInfo(final ProjectManager projectManager, final String jiraUser,
+			final String issueTypeName, final IssueService issueService, final JiraAuthenticationContext authContext,
+			final IssuePropertyService propertyService, final WorkflowManager workflowManager,
 			final JsonEntityPropertyManager jsonEntityPropertyManager) {
 		final ApplicationUser jiraSysAdmin = jiraUserManager.getUserByName(jiraUser);
 		if (jiraSysAdmin == null) {
@@ -212,15 +205,14 @@ public class HubJiraTask {
 			return null;
 		}
 
-		final TicketGeneratorInfo ticketServices = new TicketGeneratorInfo(projectManager, issueService,
-				jiraSysAdmin, issueTypeName, authContext, propertyService, workflowManager,
-				jsonEntityPropertyManager);
+		final TicketGeneratorInfo ticketServices = new TicketGeneratorInfo(projectManager, issueService, jiraSysAdmin,
+				issueTypeName, authContext, propertyService, workflowManager, jsonEntityPropertyManager);
 		return ticketServices;
 	}
 
 	private TicketGenerator initTicketGenerator(final TicketGeneratorInfo ticketServices,
-			final RestConnection restConnection,
-			final HubIntRestService hub, final HubItemsService<NotificationItem> hubItemsService) {
+			final RestConnection restConnection, final HubIntRestService hub,
+			final HubItemsService<NotificationItem> hubItemsService) {
 		final TicketGenerator ticketGenerator = new TicketGenerator(restConnection, hub, hubItemsService,
 				ticketServices);
 		return ticketGenerator;
@@ -243,7 +235,6 @@ public class HubJiraTask {
 		return hub;
 	}
 
-
 	private RestConnection initRestConnection() throws EncryptionException, URISyntaxException, BDRestException {
 
 		final RestConnection restConnection = new RestConnection(serverConfig.getHubUrl().toString());
@@ -259,7 +250,8 @@ public class HubJiraTask {
 
 	private HubJiraConfigSerializable validateInput() {
 		if (projectMappingJson == null) {
-			logger.debug("HubNotificationCheckTask: Project Mappings not configured, therefore there is nothing to do.");
+			logger.debug(
+					"HubNotificationCheckTask: Project Mappings not configured, therefore there is nothing to do.");
 			return null;
 		}
 
@@ -290,8 +282,9 @@ public class HubJiraTask {
 	private Date deriveStartDate(final String installDateString, final String lastRunDateString) throws ParseException {
 		final Date startDate;
 		if (lastRunDateString == null) {
-			logger.info("No lastRunDate set, so this is the first run; Will collect notifications since the plugin install time: "
-					+ installDateString);
+			logger.info(
+					"No lastRunDate set, so this is the first run; Will collect notifications since the plugin install time: "
+							+ installDateString);
 
 			startDate = dateFormatter.parse(installDateString);
 

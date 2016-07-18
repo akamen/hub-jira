@@ -8,13 +8,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.atlassian.jira.issue.issuetype.IssueType;
+import com.blackducksoftware.integration.hub.api.component.ComponentVersionStatus;
+import com.blackducksoftware.integration.hub.api.notification.NotificationType;
+import com.blackducksoftware.integration.hub.api.version.ReleaseItem;
 import com.blackducksoftware.integration.hub.exception.UnexpectedHubResponseException;
-import com.blackducksoftware.integration.hub.version.api.ReleaseItem;
 import com.blackducksoftware.integration.jira.HubJiraLogger;
 import com.blackducksoftware.integration.jira.config.HubProjectMapping;
 import com.blackducksoftware.integration.jira.config.JiraProject;
-import com.blackducksoftware.integration.jira.hub.model.component.ComponentVersionStatus;
-import com.blackducksoftware.integration.jira.hub.model.notification.NotificationType;
 
 public abstract class NotificationFilter {
 	private final HubJiraLogger logger = new HubJiraLogger(Logger.getLogger(this.getClass().getName()));
@@ -38,7 +38,7 @@ public abstract class NotificationFilter {
 	public FilteredNotificationResults handleNotification(final NotificationType notificationType,
 			final String projectName, final String projectVersionName,
 			final List<ComponentVersionStatus> compVerStatuses, final ReleaseItem notifHubProjectReleaseItem)
-					throws UnexpectedHubResponseException, HubNotificationServiceException {
+			throws UnexpectedHubResponseException, HubNotificationServiceException {
 		final FilteredNotificationResults notifResults = new FilteredNotificationResults();
 
 		final String projectUrl = getProjectLink(notifHubProjectReleaseItem);
@@ -66,8 +66,7 @@ public abstract class NotificationFilter {
 			logger.debug("JIRA Project: " + jiraProject);
 
 			final FilteredNotificationResults oneProjectsResults = handleNotificationPerJiraProject(notificationType,
-					projectName, projectVersionName, compVerStatuses,
-					notifHubProjectReleaseItem, jiraProject);
+					projectName, projectVersionName, compVerStatuses, notifHubProjectReleaseItem, jiraProject);
 			if (oneProjectsResults != null) {
 				notifResults.addAllResults(oneProjectsResults);
 			}
@@ -78,8 +77,7 @@ public abstract class NotificationFilter {
 	public abstract FilteredNotificationResults handleNotificationPerJiraProject(
 			final NotificationType notificationType, final String projectName, final String projectVersionName,
 			final List<ComponentVersionStatus> compVerStatuses, final ReleaseItem notifHubProjectReleaseItem,
-			JiraProject jiraProject)
-					throws UnexpectedHubResponseException, HubNotificationServiceException;
+			JiraProject jiraProject) throws UnexpectedHubResponseException, HubNotificationServiceException;
 
 	public List<HubProjectMapping> getMatchingMappings(final String notifHubProjectUrl) {
 		if ((mappings == null) || (mappings.size() == 0)) {
@@ -88,7 +86,7 @@ public abstract class NotificationFilter {
 		}
 		final List<HubProjectMapping> matchingMappings = new ArrayList<HubProjectMapping>();
 		logger.debug("NotificationFilter.getMatchingMapping() Sifting through " + mappings.size()
-		+ " mappings, looking for a match for this notification's Hub project: " + notifHubProjectUrl);
+				+ " mappings, looking for a match for this notification's Hub project: " + notifHubProjectUrl);
 		for (final HubProjectMapping mapping : mappings) {
 			final String mappingHubProjectUrl = mapping.getHubProject().getProjectUrl();
 			if (mappingHubProjectUrl.equals(notifHubProjectUrl)) {
@@ -127,7 +125,7 @@ public abstract class NotificationFilter {
 
 		if (atlassianJiraProject.getIssueTypes() == null || atlassianJiraProject.getIssueTypes().isEmpty()) {
 			bdsJiraProject.setProjectError("The Jira project : " + bdsJiraProject.getProjectName()
-			+ " does not have any issue types, we will not be able to create tickets for this project.");
+					+ " does not have any issue types, we will not be able to create tickets for this project.");
 		} else {
 			boolean projectHasIssueType = false;
 			if (atlassianJiraProject.getIssueTypes() != null && !atlassianJiraProject.getIssueTypes().isEmpty()) {
