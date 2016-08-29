@@ -47,6 +47,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.opensymphony.workflow.loader.ActionDescriptor;
 
+
 public class JiraIssueHandler {
 	public static final String DONE_STATUS = "Done";
 	public static final String REOPEN_STATUS = "Reopen";
@@ -138,9 +139,9 @@ public class JiraIssueHandler {
 
 		final IssueInputParameters issueInputParameters = jiraServices.getIssueService().newIssueInputParameters();
 		issueInputParameters.setProjectId(notificationEvent.getJiraProjectId())
-				.setIssueTypeId(notificationEvent.getJiraIssueTypeId()).setSummary(notificationEvent.getIssueSummary())
-				.setReporterId(notificationEvent.getJiraUserName())
-				.setDescription(notificationEvent.getIssueDescription());
+		.setIssueTypeId(notificationEvent.getJiraIssueTypeId()).setSummary(notificationEvent.getIssueSummary())
+		.setReporterId(notificationEvent.getJiraUserName())
+		.setDescription(notificationEvent.getIssueDescription());
 
 		final CreateValidationResult validationResult = jiraServices.getIssueService()
 				.validateCreate(jiraContext.getJiraUser(), issueInputParameters);

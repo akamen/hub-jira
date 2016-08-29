@@ -31,6 +31,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.exception.CreateException;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.blackducksoftware.integration.hub.HubIntRestService;
@@ -117,6 +118,27 @@ public class HubJiraTask {
 		} catch (final ParseException e) {
 			logger.info("This is the first run, but the plugin install date cannot be parsed; Not doing anything this time, will record collection start time and start collecting notifications next time");
 			return runDateString;
+		}
+
+		// TODO TEMP TEST CODE
+		// FieldLayoutScheme fieldLayoutScheme =
+		// ComponentAccessor.getFieldLayoutManager().createFieldLayoutScheme("test",
+		// "test");
+		// FieldLayoutSchemeEntity fieldLayoutSchemeEntity = new
+		// FieldLayoutSchemeEntityImpl();
+		// fieldLayoutScheme.addEntity(fieldLayoutSchemeEntity );
+		// fieldLayoutScheme.getFieldLayoutId(arg0)
+		final Long anonAvatarId = ComponentAccessor.getAvatarManager().getAnonymousAvatarId();
+		// UserManager jiraUserManager = ComponentAccessor.getUserManager();
+		// jiraUserManager.getUserByName(jiraUser).get
+		logger.info("TEMP TEST CODE: Creating Issue Type; Anon Avatar ID: " + anonAvatarId);
+		try {
+			ComponentAccessor.getConstantsManager().insertIssueType("Steve Issue Type",
+					0L, null,
+					"Just messing around...", anonAvatarId);
+		} catch (final CreateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 		try {
