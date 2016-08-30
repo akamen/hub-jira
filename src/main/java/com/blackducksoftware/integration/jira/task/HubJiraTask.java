@@ -23,15 +23,21 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.ofbiz.core.entity.GenericEntityException;
 
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.exception.CreateException;
+import com.atlassian.jira.issue.customfields.CustomFieldSearcher;
+import com.atlassian.jira.issue.customfields.CustomFieldType;
+import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.blackducksoftware.integration.hub.HubIntRestService;
@@ -120,26 +126,8 @@ public class HubJiraTask {
 			return runDateString;
 		}
 
-		// TODO TEMP TEST CODE
-		// FieldLayoutScheme fieldLayoutScheme =
-		// ComponentAccessor.getFieldLayoutManager().createFieldLayoutScheme("test",
-		// "test");
-		// FieldLayoutSchemeEntity fieldLayoutSchemeEntity = new
-		// FieldLayoutSchemeEntityImpl();
-		// fieldLayoutScheme.addEntity(fieldLayoutSchemeEntity );
-		// fieldLayoutScheme.getFieldLayoutId(arg0)
-		final Long anonAvatarId = ComponentAccessor.getAvatarManager().getAnonymousAvatarId();
-		// UserManager jiraUserManager = ComponentAccessor.getUserManager();
-		// jiraUserManager.getUserByName(jiraUser).get
-		logger.info("TEMP TEST CODE: Creating Issue Type; Anon Avatar ID: " + anonAvatarId);
-		try {
-			ComponentAccessor.getConstantsManager().insertIssueType("Steve Issue Type",
-					0L, null,
-					"Just messing around...", anonAvatarId);
-		} catch (final CreateException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		createIssueType();
+		createCustomField();
 
 		try {
 			final RestConnection restConnection = initRestConnection();
@@ -191,6 +179,75 @@ public class HubJiraTask {
 			return null;
 		}
 		return runDateString;
+	}
+
+	private static final String ISSUE_TYPE_NAME = "Steve Issue Type3";
+	private void createIssueType() {
+		// TODO TEMP TEST CODE
+		// FieldLayoutScheme fieldLayoutScheme =
+		// ComponentAccessor.getFieldLayoutManager().createFieldLayoutScheme("test",
+		// "test");
+		// FieldLayoutSchemeEntity fieldLayoutSchemeEntity = new
+		// FieldLayoutSchemeEntityImpl();
+		// fieldLayoutScheme.addEntity(fieldLayoutSchemeEntity );
+		// fieldLayoutScheme.getFieldLayoutId(arg0)
+		final Long anonAvatarId = ComponentAccessor.getAvatarManager().getAnonymousAvatarId();
+		// UserManager jiraUserManager = ComponentAccessor.getUserManager();
+		// jiraUserManager.getUserByName(jiraUser).get
+		final Collection<IssueType> existingIssueTypes = ComponentAccessor.getConstantsManager()
+				.getAllIssueTypeObjects();
+		for (final IssueType existingIssueType : existingIssueTypes) {
+			logger.info("TEMP TEST CODE: Checking IssueType: " + existingIssueType.getName());
+			if (existingIssueType.getName().equals(ISSUE_TYPE_NAME)) {
+				logger.info("TEMP TEST CODE: Issue Type already exists: " + existingIssueType.getName());
+				return;
+			}
+		}
+		logger.info("TEMP TEST CODE: Did not find Issue Type: " + ISSUE_TYPE_NAME);
+		logger.info("TEMP TEST CODE: Creating Issue Type: " + ISSUE_TYPE_NAME + "; Anon Avatar ID: " + anonAvatarId);
+		IssueType newIssueType = null;
+		try {
+			newIssueType = ComponentAccessor.getConstantsManager().insertIssueType(ISSUE_TYPE_NAME,
+					0L, null,
+					"Just messing around...", anonAvatarId);
+		} catch (final CreateException e) {
+			// TODO Auto-generated catch block
+			logger.error("TEMP TEST CODE: Failed to create issue type: " + ISSUE_TYPE_NAME);
+			e.printStackTrace();
+		}
+		logger.info("TEMP TEST CODE: Created new issue type: " + newIssueType.getName());
+	}
+
+	private static final String CUSTOM_FIELD_NAME = "Policy Puked On";
+	private void createCustomField() {
+
+		// TODO Should check to see if field exists
+		final CustomField existingField = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectByName(
+				CUSTOM_FIELD_NAME);
+		if (existingField != null) {
+			logger.info("TEMP TEST CODE: Custom Field already exists: " + existingField.getName());
+			return;
+		}
+		logger.info("TEMP TEST CODE: Did not find custom field: " + CUSTOM_FIELD_NAME);
+		logger.info("TEMP TEST CODE: Creating custom field: " + CUSTOM_FIELD_NAME);
+
+		// Create Custom Field
+		final CustomFieldType textFieldType = ComponentAccessor.getCustomFieldManager().getCustomFieldType(
+				"com.atlassian.jira.plugin.system.customfieldtypes:textfield");
+		final CustomFieldSearcher textFieldSearcher = ComponentAccessor.getCustomFieldManager().getDefaultSearcher(
+				textFieldType);
+		CustomField newCustomField = null;
+		try {
+			// TODO: The nulls here mean this field will be global, I think
+			newCustomField = ComponentAccessor.getCustomFieldManager().createCustomField(CUSTOM_FIELD_NAME,
+					"The rule that was violated",
+					textFieldType, textFieldSearcher, null, null);
+		} catch (final GenericEntityException e) {
+			// TODO Auto-generated catch block
+			logger.error("TEMP TEST CODE: Failed to create custom field: " + CUSTOM_FIELD_NAME);
+			e.printStackTrace();
+		}
+		logger.info("TEMP TEST CODE: Created custom field: " + newCustomField.getName());
 	}
 
 	private List<String> getRuleUrls(final HubJiraConfigSerializable config) {
