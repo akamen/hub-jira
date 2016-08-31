@@ -39,6 +39,7 @@ import com.atlassian.jira.issue.customfields.CustomFieldType;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
 import com.atlassian.jira.issue.issuetype.IssueType;
+import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.blackducksoftware.integration.hub.HubIntRestService;
@@ -64,6 +65,12 @@ import com.blackducksoftware.integration.jira.task.issue.JiraServices;
 import com.google.gson.reflect.TypeToken;
 
 public class HubJiraTask {
+
+	private static final String dateTimeStamp = String.valueOf((new Date()).getTime());
+	private static final String PROJECT_NAME = "Test" + dateTimeStamp;
+	private static final String ISSUE_TYPE_NAME = "Custom Issue Type" + dateTimeStamp;
+	private static final String CUSTOM_FIELD_NAME = "Custom Field " + dateTimeStamp;
+
 	private final HubJiraLogger logger = new HubJiraLogger(Logger.getLogger(this.getClass().getName()));
 	private static final String JIRA_ISSUE_TYPE_NAME_DEFAULT = "Task";
 	private final HubServerConfig serverConfig;
@@ -127,8 +134,13 @@ public class HubJiraTask {
 			return runDateString;
 		}
 
+		// TEMP TEST CODE
 		final IssueType newIssueType = createIssueType();
-		createCustomField(newIssueType);
+		final Project project = getProject(PROJECT_NAME);
+		if (project != null) {
+			addIssueTypeToProject(project, newIssueType);
+			// createCustomField(newIssueType);
+		}
 
 		try {
 			final RestConnection restConnection = initRestConnection();
@@ -182,8 +194,7 @@ public class HubJiraTask {
 		return runDateString;
 	}
 
-	private static final String ISSUE_TYPE_NAME = "Steve Issue Type7";
-	private static final String CUSTOM_FIELD_NAME = "Policy Rule Violated7";
+
 
 	private IssueType createIssueType() {
 		// TODO TEMP TEST CODE
@@ -238,9 +249,63 @@ public class HubJiraTask {
 			logger.error("TEMP TEST CODE: Failed to create issue type: " + ISSUE_TYPE_NAME);
 			e.printStackTrace();
 		}
-		logger.info("TEMP TEST CODE: Created new issue type: " + newIssueType.getName());
+		logger.info("TEMP TEST CODE: Created new issue type: " + newIssueType.getName() + " (id: "
+				+ newIssueType.getId());
 
 		return newIssueType;
+	}
+
+	private Project getProject(final String projectName) {
+		Project project = null;
+		try {
+			project = ComponentAccessor.getProjectManager().getProjectObjByName(projectName);
+		} catch (final Exception e) {
+
+		}
+		if (project == null) {
+			logger.info("TEMP TEST CODE: project " + projectName + " not found");
+		}
+		return project;
+	}
+
+	private void addIssueTypeToProject(final Project project, final IssueType newIssueType) {
+		final FieldConfigScheme projectIssueTypeScheme = ComponentAccessor.getIssueTypeSchemeManager().getConfigScheme(
+				project);
+		logger.info("TEMP TEST CODE: Project: " + project.getName() + "; projectIssueTypeScheme: "
+				+ projectIssueTypeScheme.getName());
+
+		final Collection<IssueType> origIssueTypeObjects = ComponentAccessor.getIssueTypeSchemeManager()
+				.getIssueTypesForProject(project);
+
+		// This does not work:
+		// final Collection<IssueType> origIssueTypeObjects =
+		// projectIssueTypeScheme.getAssociatedIssueTypeObjects();
+
+		logger.info("TEMP TEST CODE: project started with " + origIssueTypeObjects.size() + " issue types");
+		final Collection<String> issueTypeIds = new ArrayList<>();
+		for (final IssueType origIssueTypeObject : origIssueTypeObjects) {
+			if (origIssueTypeObject == null) {
+				logger.info("\torigIssueTypeObject is NULL");
+			}
+			logger.info("\tIssueType: " + origIssueTypeObject.getName() + "; ID: " + origIssueTypeObject.getId());
+			issueTypeIds.add(origIssueTypeObject.getId());
+		}
+
+		if (!origIssueTypeObjects.contains(newIssueType)) {
+			logger.info("TEST TEST CODE: Adding issue type " + newIssueType.getName() + " to issue type scheme "
+					+ projectIssueTypeScheme.getName());
+			issueTypeIds.add(newIssueType.getId());
+			ComponentAccessor.getIssueTypeSchemeManager().update(projectIssueTypeScheme, issueTypeIds);
+			logger.info("TEMP TEST CODE: project now has " + issueTypeIds.size() + " issue types");
+			for (final String newIssueTypeId : issueTypeIds) {
+				logger.info("\tIssueTypeId: " + newIssueTypeId);
+			}
+		} else {
+			logger.info("TEST TEST CODE: issue type " + newIssueType.getName() + " is already on issue type scheme "
+					+ projectIssueTypeScheme.getName());
+		}
+
+
 	}
 
 	private CustomField createCustomField(final IssueType issueType) {
