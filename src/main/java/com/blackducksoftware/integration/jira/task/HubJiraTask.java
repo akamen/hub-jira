@@ -37,6 +37,7 @@ import com.atlassian.jira.exception.CreateException;
 import com.atlassian.jira.issue.customfields.CustomFieldSearcher;
 import com.atlassian.jira.issue.customfields.CustomFieldType;
 import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
@@ -181,7 +182,8 @@ public class HubJiraTask {
 		return runDateString;
 	}
 
-	private static final String ISSUE_TYPE_NAME = "Steve Issue Type4";
+	private static final String ISSUE_TYPE_NAME = "Steve Issue Type7";
+	private static final String CUSTOM_FIELD_NAME = "Policy Rule Violated7";
 
 	private IssueType createIssueType() {
 		// TODO TEMP TEST CODE
@@ -208,6 +210,24 @@ public class HubJiraTask {
 		}
 		logger.info("TEMP TEST CODE: Did not find Issue Type: " + ISSUE_TYPE_NAME);
 		logger.info("TEMP TEST CODE: Creating Issue Type: " + ISSUE_TYPE_NAME + "; Anon Avatar ID: " + anonAvatarId);
+
+		// final IssueTypeService.IssueTypeCreateInput.Builder builder =
+		// IssueTypeService.IssueTypeCreateInput.builder();
+		// final IssueTypeService.IssueTypeCreateInput input = builder
+		// .setType(IssueTypeService.IssueTypeCreateInput.Type.STANDARD).setName(ISSUE_TYPE_NAME)
+		// .setDescription("test description").build();
+		//
+		// final IssueInputParameters createIssueTypeParameters =
+		// ComponentAccessor.getIssueService()
+		// .newIssueInputParameters();
+		// createIssueTypeParameters.setIssueTypeId(ISSUE_TYPE_NAME).set
+		//
+		//
+		// final ApplicationUser jiraUserObject = null;
+		// IssueTypeService.
+		// TODO: There is an IssueTypeService and an IssueTypeManager. Both have
+		// createIssueType(). Both seem to be for internal use.
+
 		IssueType newIssueType = null;
 		try {
 			newIssueType = ComponentAccessor.getConstantsManager().insertIssueType(ISSUE_TYPE_NAME,
@@ -219,19 +239,26 @@ public class HubJiraTask {
 			e.printStackTrace();
 		}
 		logger.info("TEMP TEST CODE: Created new issue type: " + newIssueType.getName());
+
 		return newIssueType;
 	}
 
-	private static final String CUSTOM_FIELD_NAME = "Policy Rule Violated4";
-
-	private void createCustomField(final IssueType issueType) {
+	private CustomField createCustomField(final IssueType issueType) {
 
 		// TODO Should check to see if field exists
 		final CustomField existingField = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectByName(
 				CUSTOM_FIELD_NAME);
 		if (existingField != null) {
 			logger.info("TEMP TEST CODE: Custom Field already exists: " + existingField.getName());
-			return;
+
+			final List<FieldConfigScheme> fieldConfigSchemes = ComponentAccessor.getFieldConfigSchemeManager()
+					.getConfigSchemesForField(existingField);
+			logger.info("TEMP TEST CODE: This field has " + fieldConfigSchemes.size() + " FieldConfigSchemes");
+			for (final FieldConfigScheme scheme : fieldConfigSchemes) {
+				logger.info("\n" + scheme);
+			}
+
+			return existingField;
 		}
 		logger.info("TEMP TEST CODE: Did not find custom field: " + CUSTOM_FIELD_NAME);
 		logger.info("TEMP TEST CODE: Creating custom field: " + CUSTOM_FIELD_NAME);
@@ -268,6 +295,15 @@ public class HubJiraTask {
 			e.printStackTrace();
 		}
 		logger.info("TEMP TEST CODE: Created custom field: " + newCustomField.getName());
+
+		final List<FieldConfigScheme> fieldConfigSchemes = ComponentAccessor.getFieldConfigSchemeManager()
+				.getConfigSchemesForField(newCustomField);
+		logger.info("TEMP TEST CODE: This field has " + fieldConfigSchemes.size() + " FieldConfigSchemes");
+		for (final FieldConfigScheme scheme : fieldConfigSchemes) {
+			logger.info("\n" + scheme);
+		}
+
+		return newCustomField;
 	}
 
 	private List<String> getRuleUrls(final HubJiraConfigSerializable config) {
