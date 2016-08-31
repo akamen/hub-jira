@@ -126,8 +126,8 @@ public class HubJiraTask {
 			return runDateString;
 		}
 
-		createIssueType();
-		createCustomField();
+		final IssueType newIssueType = createIssueType();
+		createCustomField(newIssueType);
 
 		try {
 			final RestConnection restConnection = initRestConnection();
@@ -181,9 +181,12 @@ public class HubJiraTask {
 		return runDateString;
 	}
 
-	private static final String ISSUE_TYPE_NAME = "Steve Issue Type3";
-	private void createIssueType() {
+	private static final String ISSUE_TYPE_NAME = "Steve Issue Type4";
+
+	private IssueType createIssueType() {
 		// TODO TEMP TEST CODE
+		// TODO: Why can't issueType be Deleted?
+
 		// FieldLayoutScheme fieldLayoutScheme =
 		// ComponentAccessor.getFieldLayoutManager().createFieldLayoutScheme("test",
 		// "test");
@@ -200,7 +203,7 @@ public class HubJiraTask {
 			logger.info("TEMP TEST CODE: Checking IssueType: " + existingIssueType.getName());
 			if (existingIssueType.getName().equals(ISSUE_TYPE_NAME)) {
 				logger.info("TEMP TEST CODE: Issue Type already exists: " + existingIssueType.getName());
-				return;
+				return existingIssueType;
 			}
 		}
 		logger.info("TEMP TEST CODE: Did not find Issue Type: " + ISSUE_TYPE_NAME);
@@ -216,10 +219,12 @@ public class HubJiraTask {
 			e.printStackTrace();
 		}
 		logger.info("TEMP TEST CODE: Created new issue type: " + newIssueType.getName());
+		return newIssueType;
 	}
 
-	private static final String CUSTOM_FIELD_NAME = "Policy Puked On";
-	private void createCustomField() {
+	private static final String CUSTOM_FIELD_NAME = "Policy Rule Violated4";
+
+	private void createCustomField(final IssueType issueType) {
 
 		// TODO Should check to see if field exists
 		final CustomField existingField = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectByName(
@@ -236,12 +241,27 @@ public class HubJiraTask {
 				"com.atlassian.jira.plugin.system.customfieldtypes:textfield");
 		final CustomFieldSearcher textFieldSearcher = ComponentAccessor.getCustomFieldManager().getDefaultSearcher(
 				textFieldType);
+
+		final List<IssueType> issueTypeList = new ArrayList<>();
+		logger.info("Adding issue type to list for custom attribute: " + issueType.getName());
+		issueTypeList.add(issueType);
+
+		// final JiraContextNode context = GlobalIssueContext.getInstance();
+		// final List<JiraContextNode> contexts = new ArrayList<>();
+		// contexts.add(context);
+		// THIS RESULTS IN Available Context(s):
+		// "Not configured for any context"
+		// PASSING IN contexts=null RESULTS IN Available Context(s): <same>
+		// [Strange, I thought it resulted in something including the word
+		// "global"
+		// Creating by hand results in: "Issue type(s): Global (all issues)"
+
 		CustomField newCustomField = null;
 		try {
-			// TODO: The nulls here mean this field will be global, I think
+			// TODO: Context should not be global
 			newCustomField = ComponentAccessor.getCustomFieldManager().createCustomField(CUSTOM_FIELD_NAME,
 					"The rule that was violated",
-					textFieldType, textFieldSearcher, null, null);
+					textFieldType, textFieldSearcher, null, issueTypeList);
 		} catch (final GenericEntityException e) {
 			// TODO Auto-generated catch block
 			logger.error("TEMP TEST CODE: Failed to create custom field: " + CUSTOM_FIELD_NAME);
