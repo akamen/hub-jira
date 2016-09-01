@@ -38,6 +38,7 @@ import com.atlassian.jira.issue.customfields.CustomFieldSearcher;
 import com.atlassian.jira.issue.customfields.CustomFieldType;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
+import com.atlassian.jira.issue.fields.layout.field.FieldConfigurationScheme;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
@@ -140,6 +141,9 @@ public class HubJiraTask {
 		if (project != null) {
 			addIssueTypeToProject(project, newIssueType);
 			// createCustomField(newIssueType);
+
+			// null means default
+			final FieldConfigurationScheme fieldConfigurationScheme = getProjectFieldConfigScheme(project);
 		}
 
 		try {
@@ -194,7 +198,25 @@ public class HubJiraTask {
 		return runDateString;
 	}
 
+	private FieldConfigurationScheme getProjectFieldConfigScheme(final Project project) {
 
+		FieldConfigurationScheme projectFieldConfigScheme = null;
+		try {
+			logger.debug("Getting field configuration scheme for project " + project.getName() + " [ID: "
+					+ project.getId() + "]");
+			projectFieldConfigScheme = ComponentAccessor.getFieldLayoutManager().getFieldConfigurationSchemeForProject(
+					project.getId());
+			logger.debug("\tprojectFieldConfigScheme: " + projectFieldConfigScheme);
+		} catch (final Exception e) {
+			logger.error(e.getMessage());
+		}
+		if (projectFieldConfigScheme == null) {
+			logger.info("Project " + project.getName() + " field config scheme: Default Field Configuration Scheme");
+		} else {
+			logger.info("Project " + project.getName() + " field config scheme: " + projectFieldConfigScheme.getName());
+		}
+		return projectFieldConfigScheme;
+	}
 
 	private IssueType createIssueType() {
 		// TODO TEMP TEST CODE
