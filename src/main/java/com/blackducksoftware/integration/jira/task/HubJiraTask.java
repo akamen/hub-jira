@@ -40,6 +40,8 @@ import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
 import com.atlassian.jira.issue.fields.layout.field.FieldConfigurationScheme;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayout;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutScheme;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutSchemeEntity;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
@@ -149,6 +151,9 @@ public class HubJiraTask {
 				final FieldConfigurationScheme otherFieldConfigurationScheme = getAnyFieldConfigurationScheme();
 				if (otherFieldConfigurationScheme != null) {
 					setProjectFieldConfigScheme(project, otherFieldConfigurationScheme);
+					report(project);
+					addIssueTypeFieldConfigToFieldConfigScheme(otherFieldConfigurationScheme, newIssueType,
+							getDefaultFieldLayout());
 				}
 			}
 		}
@@ -216,7 +221,7 @@ public class HubJiraTask {
 		// ComponentAccessor.getFieldLayoutManager().
 		logger.info("TEMP TEST CODE: Getting fieldLayout");
 		// This returns "Default Field Configuation"
-		final FieldLayout defaultFieldLayout = ComponentAccessor.getFieldLayoutManager().getFieldLayout();
+		final FieldLayout defaultFieldLayout = getDefaultFieldLayout();
 		logger.info("TEMP TEST CODE: fieldLayout: " + defaultFieldLayout.getName());
 		// ComponentAccessor.getFieldConfigSchemeManager().get
 		final Collection<FieldConfigurationScheme> fieldConfigSchemes = ComponentAccessor.getFieldLayoutManager()
@@ -227,6 +232,69 @@ public class HubJiraTask {
 			return fieldConfigScheme;
 		}
 		return null;
+	}
+
+	private FieldLayout getDefaultFieldLayout() {
+		return ComponentAccessor.getFieldLayoutManager().getFieldLayout();
+	}
+
+	private void report(final Project project) {
+		logger.info("Project " + project.getName() + " info:");
+		// These next two calls return the same object instance, an
+		// ImmutableFieldConfigurationScheme
+		final FieldConfigurationScheme fieldConfigScheme1 = ComponentAccessor.getFieldLayoutManager()
+				.getFieldConfigurationScheme(project);
+		logger.info("\tComponentAccessor.getFieldLayoutManager().getFieldConfigurationScheme(project): "
+				+ fieldConfigScheme1 + " (name: " + fieldConfigScheme1.getName() + ", id: "
+				+ fieldConfigScheme1.getId() + ")");
+
+		final FieldConfigurationScheme fieldConfigScheme2 = ComponentAccessor.getFieldLayoutManager()
+				.getFieldConfigurationSchemeForProject(project.getId());
+		logger.info("\tComponentAccessor.getFieldLayoutManager().getFieldConfigurationSchemeForProject(project.getId()): "
+				+ fieldConfigScheme2
+				+ " (name: "
+				+ fieldConfigScheme2.getName()
+				+ ", id: "
+				+ fieldConfigScheme2.getId() + ")");
+
+		// This returns a different type (FieldLayoutSchemeImpl), but it has the
+		// same name: Customer Field Configuration Scheme
+		// AND THE SAME ID; IF this is not coincidence, this looks like a way to
+		// translate from one type to another
+		// (do a lookup of the other type by ID)
+		// Though it would be better to stay with one type
+		logger.info("Global info:");
+		final List<FieldLayoutScheme> fieldLayoutSchemes = ComponentAccessor.getFieldLayoutManager().getFieldLayoutSchemes();
+		logger.info("ComponentAccessor.getFieldLayoutManager().getFieldLayoutSchemes().size(): " + fieldLayoutSchemes.size());
+		for (final FieldLayoutScheme fieldLayoutScheme : fieldLayoutSchemes) {
+			logger.info("\tfieldLayoutScheme: " + fieldLayoutScheme + " (name: " + fieldLayoutScheme.getName()
+					+ ", id: " + fieldLayoutScheme.getId() + ")");
+		}
+
+	}
+
+	private FieldLayoutScheme getFieldLayoutScheme(final FieldConfigurationScheme fieldConfigurationScheme) {
+		final FieldLayoutScheme fls = ComponentAccessor.getFieldLayoutManager().getMutableFieldLayoutScheme(
+				fieldConfigurationScheme.getId());
+		logger.info("getFieldLayoutScheme(): FieldConfigurationScheme: " + fieldConfigurationScheme.getName()
+				+ " ==> FieldLayoutScheme: " + fls.getName());
+		return fls;
+	}
+
+	// add an IssueType ==> FieldConfiguration association to the given field
+	// configuration scheme
+	// That is, create a FieldLayoutSchemeEntity and add it to the
+	// FieldConfigurationScheme
+	private void addIssueTypeFieldConfigToFieldConfigScheme(final FieldConfigurationScheme fieldConfigurationScheme,
+			final IssueType issueType, final FieldLayout fieldConfiguration) {
+
+		final FieldLayoutScheme fieldLayoutScheme = getFieldLayoutScheme(fieldConfigurationScheme);
+		final FieldLayoutSchemeEntity fieldLayoutSchemeEntity = ComponentAccessor.getFieldLayoutManager()
+				.createFieldLayoutSchemeEntity(fieldLayoutScheme, issueType.getId(), fieldConfiguration.getId());
+
+		logger.info("Adding to fieldLayoutScheme: " + fieldLayoutScheme.getName() + ": issueType "
+				+ issueType.getName() + " ==> field configuration " + fieldConfiguration.getName());
+		fieldLayoutScheme.addEntity(fieldLayoutSchemeEntity);
 	}
 
 	private void setProjectFieldConfigScheme(final Project project,
@@ -262,6 +330,7 @@ public class HubJiraTask {
 		} else {
 			logger.info("Project " + project.getName() + " field config scheme: " + projectFieldConfigScheme.getName());
 		}
+
 		return projectFieldConfigScheme;
 	}
 
