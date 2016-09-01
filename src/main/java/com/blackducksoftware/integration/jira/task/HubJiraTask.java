@@ -39,6 +39,7 @@ import com.atlassian.jira.issue.customfields.CustomFieldType;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
 import com.atlassian.jira.issue.fields.layout.field.FieldConfigurationScheme;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayout;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
@@ -143,7 +144,13 @@ public class HubJiraTask {
 			// createCustomField(newIssueType);
 
 			// null means default
-			final FieldConfigurationScheme fieldConfigurationScheme = getProjectFieldConfigScheme(project);
+			final FieldConfigurationScheme projectFieldConfigurationScheme = getProjectFieldConfigScheme(project);
+			if (projectFieldConfigurationScheme == null) {
+				final FieldConfigurationScheme otherFieldConfigurationScheme = getAnyFieldConfigurationScheme();
+				if (otherFieldConfigurationScheme != null) {
+					setProjectFieldConfigScheme(project, otherFieldConfigurationScheme);
+				}
+			}
 		}
 
 		try {
@@ -196,6 +203,46 @@ public class HubJiraTask {
 			return null;
 		}
 		return runDateString;
+	}
+
+	private FieldConfigurationScheme getAnyFieldConfigurationScheme() {
+		// ComponentAccessor.getFieldManager().getField(arg0)
+		// IssueTypeField issueTypeField =
+		// ComponentAccessor.getFieldManager().getIssueTypeField();
+		// get field configuration scheme by name
+		// FieldConfigurationScheme fieldConfigScheme =
+		// ComponentAccessor.getFieldConfigSchemeManager().getConfigSchemesForField(issueTypeField);
+		// FieldConfigurationScheme fieldConfigScheme =
+		// ComponentAccessor.getFieldLayoutManager().
+		logger.info("TEMP TEST CODE: Getting fieldLayout");
+		// This returns "Default Field Configuation"
+		final FieldLayout defaultFieldLayout = ComponentAccessor.getFieldLayoutManager().getFieldLayout();
+		logger.info("TEMP TEST CODE: fieldLayout: " + defaultFieldLayout.getName());
+		// ComponentAccessor.getFieldConfigSchemeManager().get
+		final Collection<FieldConfigurationScheme> fieldConfigSchemes = ComponentAccessor.getFieldLayoutManager()
+				.getFieldConfigurationSchemes(defaultFieldLayout);
+		logger.info("TEMP TEST CODE: fieldConfigSchemes.size(): " + fieldConfigSchemes.size());
+		for (final FieldConfigurationScheme fieldConfigScheme : fieldConfigSchemes) {
+			logger.info("\t" + fieldConfigScheme.getName());
+			return fieldConfigScheme;
+		}
+		return null;
+	}
+
+	private void setProjectFieldConfigScheme(final Project project,
+			final FieldConfigurationScheme fieldConfigurationScheme) {
+
+
+
+		// IMPORTANT:
+		// FieldLayout in SDK is FieldConfiguration in UI
+		// FieldConfig in SDK has nothing to do with FieldConfiguration... it
+		// holds the options and values on a field
+
+		// set project's field config scheme
+		logger.info("TEMP TEST CODE: Associating fieldConfigurationScheme " + fieldConfigurationScheme.getName()
+				+ " to project " + project.getName());
+		ComponentAccessor.getFieldLayoutManager().addSchemeAssociation(project, fieldConfigurationScheme.getId());
 	}
 
 	private FieldConfigurationScheme getProjectFieldConfigScheme(final Project project) {
