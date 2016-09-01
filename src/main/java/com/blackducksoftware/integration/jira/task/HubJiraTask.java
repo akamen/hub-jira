@@ -42,6 +42,7 @@ import com.atlassian.jira.issue.fields.layout.field.FieldConfigurationScheme;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayout;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutScheme;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutSchemeEntity;
+import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenScheme;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
@@ -154,6 +155,8 @@ public class HubJiraTask {
 					report(project);
 					addIssueTypeFieldConfigToFieldConfigScheme(otherFieldConfigurationScheme, newIssueType,
 							getDefaultFieldLayout());
+					final IssueTypeScreenScheme issueTypeScreenScheme = getAnyIssueTypeScreenScheme();
+					associateIssueTypeWithScreenScheme(newIssueType, issueTypeScreenScheme);
 				}
 			}
 		}
@@ -208,6 +211,39 @@ public class HubJiraTask {
 			return null;
 		}
 		return runDateString;
+	}
+
+	private void associateIssueTypeWithScreenScheme(final IssueType issueType,
+			final IssueTypeScreenScheme issueTypeScreenScheme) {
+		// IssueTypeScreenSchemeEntity
+		// arg0=ComponentAccessor.getIssueTypeScreenSchemeManager().
+		// issueTypeScreenScheme.addEntity(arg0);
+		// ComponentAccessor.getIssueTypeScreenSchemeManager().
+
+	}
+
+	private IssueTypeScreenScheme getAnyIssueTypeScreenScheme() {
+		final Collection<IssueTypeScreenScheme> issueTypeScreenSchemes = ComponentAccessor
+				.getIssueTypeScreenSchemeManager().getIssueTypeScreenSchemes();
+		logger.info("issueTypeScreenSchemes.size(): " + issueTypeScreenSchemes.size());
+		if (issueTypeScreenSchemes.size() == 0) {
+			return null;
+		}
+		IssueTypeScreenScheme selectedIssueTypeScreenScheme = null;
+		IssueTypeScreenScheme firstIssueTypeScreenScheme = null;
+		for (final IssueTypeScreenScheme issueTypeScreenScheme : issueTypeScreenSchemes) {
+			logger.info("issueTypeScreenScheme: " + issueTypeScreenScheme.getName());
+			if (firstIssueTypeScreenScheme == null) {
+				firstIssueTypeScreenScheme = issueTypeScreenScheme;
+			}
+			if (issueTypeScreenScheme.getName().startsWith("TEST:")) {
+				selectedIssueTypeScreenScheme = issueTypeScreenScheme;
+			}
+		}
+		if (selectedIssueTypeScreenScheme == null) {
+			selectedIssueTypeScreenScheme = firstIssueTypeScreenScheme;
+		}
+		return selectedIssueTypeScreenScheme;
 	}
 
 	private FieldConfigurationScheme getAnyFieldConfigurationScheme() {
