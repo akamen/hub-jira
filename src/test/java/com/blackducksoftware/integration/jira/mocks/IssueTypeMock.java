@@ -21,14 +21,9 @@
  *******************************************************************************/
 package com.blackducksoftware.integration.jira.mocks;
 
-import java.util.Locale;
-
-import org.ofbiz.core.entity.GenericValue;
-
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.util.I18nHelper;
-import com.opensymphony.module.propertyset.PropertySet;
 
 public class IssueTypeMock implements IssueType {
 
@@ -39,13 +34,10 @@ public class IssueTypeMock implements IssueType {
 		return name;
 	}
 
-	@Override
-	public void setName(final String name) {
-		this.name = name;
-	}
 
-	@Override
-	public void deleteTranslation(final String arg0, final Locale arg1) {
+
+	protected void setName(final String name) {
+		this.name = name;
 	}
 
 	@Override
@@ -75,11 +67,7 @@ public class IssueTypeMock implements IssueType {
 		return null;
 	}
 
-	@Override
-	public GenericValue getGenericValue() {
 
-		return null;
-	}
 
 	@Override
 	public String getIconUrl() {
@@ -118,11 +106,6 @@ public class IssueTypeMock implements IssueType {
 		return null;
 	}
 
-	@Override
-	public PropertySet getPropertySet() {
-
-		return null;
-	}
 
 	@Override
 	public Long getSequence() {
@@ -130,30 +113,8 @@ public class IssueTypeMock implements IssueType {
 		return null;
 	}
 
-	@Override
-	public void setDescription(final String arg0) {
 
 
-	}
-
-	@Override
-	public void setIconUrl(final String arg0) {
-
-
-	}
-
-
-	@Override
-	public void setSequence(final Long arg0) {
-
-
-	}
-
-	@Override
-	public void setTranslation(final String arg0, final String arg1, final String arg2, final Locale arg3) {
-
-
-	}
 
 	@Override
 	public int compareTo(final Object o) {

@@ -31,8 +31,10 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.ofbiz.core.entity.GenericEntityException;
+import org.ofbiz.core.entity.GenericValue;
 
 import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.exception.CreateException;
 import com.atlassian.jira.issue.customfields.CustomFieldSearcher;
 import com.atlassian.jira.issue.customfields.CustomFieldType;
@@ -42,7 +44,13 @@ import com.atlassian.jira.issue.fields.layout.field.FieldConfigurationScheme;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayout;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutScheme;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutSchemeEntity;
+import com.atlassian.jira.issue.fields.screen.FieldScreen;
+import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
+import com.atlassian.jira.issue.fields.screen.FieldScreenSchemeManager;
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenScheme;
+import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeEntity;
+import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeEntityImpl;
+import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
@@ -156,7 +164,19 @@ public class HubJiraTask {
 					addIssueTypeFieldConfigToFieldConfigScheme(otherFieldConfigurationScheme, newIssueType,
 							getDefaultFieldLayout());
 					final IssueTypeScreenScheme issueTypeScreenScheme = getAnyIssueTypeScreenScheme();
-					associateIssueTypeWithScreenScheme(newIssueType, issueTypeScreenScheme);
+
+					// Create by hand:
+					// 0. Create Field Configuration Scheme named: Test Field Configuration Scheme
+					// 1. Screen Scheme named "Test Screen Scheme"
+					// 2. Issue Type Screen Scheme named
+					// "Test Issue Type Screen Scheme"
+					final FieldScreenScheme screenScheme = getAnyScreenScheme();
+					if (screenScheme == null) {
+						logger.error("No Screen Scheme found to associate; aborting.");
+					} else {
+						associateIssueTypeWithScreenScheme(issueTypeScreenScheme,
+								newIssueType, screenScheme);
+					}
 				}
 			}
 		}
@@ -213,13 +233,157 @@ public class HubJiraTask {
 		return runDateString;
 	}
 
-	private void associateIssueTypeWithScreenScheme(final IssueType issueType,
-			final IssueTypeScreenScheme issueTypeScreenScheme) {
+	private FieldScreenScheme getAnyScreenScheme() {
+		// Get Screens
+		final Collection<FieldScreen> screens = ComponentAccessor.getFieldScreenManager().getFieldScreens();
+		logger.info("TEMP TEST CODE: fieldScreens.size(): " + screens.size());
+		for (final FieldScreen screen : screens) {
+			logger.info("TEMP TEST CODE: fieldScreen: " + screen.getName());
+		}
+
+		final Collection<IssueTypeScreenScheme> issueTypeScreenSchemes = ComponentAccessor
+				.getIssueTypeScreenSchemeManager().getIssueTypeScreenSchemes();
+		logger.info("TEMP TEST CODE: issueTypeScreenSchemes.size(): " + issueTypeScreenSchemes.size());
+		for (final IssueTypeScreenScheme issueTypeScreenScheme : issueTypeScreenSchemes) {
+			logger.info("TEMP TEST CODE: issueTypeScreenScheme: " + issueTypeScreenScheme.getName());
+			if ("Another Issue Type Screen Scheme".equals(issueTypeScreenScheme.getName())) {
+
+				final Collection<IssueTypeScreenSchemeEntity> issueTypeScreenSchemeEntities = ComponentAccessor
+						.getIssueTypeScreenSchemeManager().getIssueTypeScreenSchemeEntities(issueTypeScreenScheme);
+				logger.info("TEMP TEST CODE: issueTypeScreenSchemeEntities.size(): " + issueTypeScreenSchemeEntities.size());
+				for (final IssueTypeScreenSchemeEntity issueTypeScreenSchemeEntity : issueTypeScreenSchemeEntities) {
+					final IssueType it = issueTypeScreenSchemeEntity.getIssueTypeObject();
+					if (it == null) {
+						logger.error("\tIssue Type: null (default)");
+					} else {
+						logger.info("\tIssue Type: " + it.getName());
+					}
+					final FieldScreenScheme fieldScreenScheme = issueTypeScreenSchemeEntity.getFieldScreenScheme();
+					if (fieldScreenScheme == null) {
+						logger.error("\tfieldScreenScheme: null");
+					} else {
+						logger.info("getAnyScreenScheme(): ScreenScheme: " + fieldScreenScheme.getName());
+						if ("Another Screen Scheme".equals(fieldScreenScheme.getName())) {
+							return fieldScreenScheme;
+						}
+					}
+				}
+
+			}
+		}
+
+		logger.error("getAnyScreenScheme(): No Screen Scheme found with name: Another Screen Scheme");
+		return null;
+	}
+
+
+	private void explore(final Project project, final IssueType newIssueType, final IssueTypeScreenScheme newIssueTypeScreenScheme) {
+		// Get Screens
+		final Collection<FieldScreen> screens = ComponentAccessor.getFieldScreenManager().getFieldScreens();
+		logger.info("TEMP TEST CODE: fieldScreens.size(): " + screens.size());
+		for (final FieldScreen screen : screens) {
+			logger.info("TEMP TEST CODE: fieldScreen: " + screen.getName());
+		}
+
+		// IssueTypeScreenSchemeEntity arg0;
+		// ComponentAccessor.getIssueTypeScreenSchemeManager().createIssueTypeScreenSchemeEntity(arg0);
+		// IssueTypeScreenSchemeEntity issueTypeScreenSchemeEntity = null;
+		// ComponentAccessor.getIssueTypeScreenSchemeManager().createIssueTypeScreenSchemeEntity(issueTypeScreenSchemeEntity
+		// );
+
+		final Collection<IssueTypeScreenScheme> issueTypeScreenSchemes = ComponentAccessor
+				.getIssueTypeScreenSchemeManager().getIssueTypeScreenSchemes();
+		logger.info("TEMP TEST CODE: issueTypeScreenSchemes.size(): " + issueTypeScreenSchemes.size());
+		for (final IssueTypeScreenScheme issueTypeScreenScheme : issueTypeScreenSchemes) {
+			logger.info("TEMP TEST CODE: issueTypeScreenScheme: " + issueTypeScreenScheme.getName());
+			if ("Test Issue Type Screen Scheme".equals(issueTypeScreenScheme.getName())) {
+
+				final Collection<IssueTypeScreenSchemeEntity> issueTypeScreenSchemeEntities = ComponentAccessor
+						.getIssueTypeScreenSchemeManager().getIssueTypeScreenSchemeEntities(issueTypeScreenScheme);
+				logger.info("TEMP TEST CODE: issueTypeScreenSchemeEntities.size(): " + issueTypeScreenSchemeEntities.size());
+				for (final IssueTypeScreenSchemeEntity issueTypeScreenSchemeEntity : issueTypeScreenSchemeEntities) {
+					final IssueType it = issueTypeScreenSchemeEntity.getIssueTypeObject();
+					if (it == null) {
+						logger.error("\tIssue Type: null (default)");
+					} else {
+						logger.info("\tIssue Type: " + it.getName());
+					}
+					final FieldScreenScheme fieldScreenScheme = issueTypeScreenSchemeEntity.getFieldScreenScheme();
+					if (fieldScreenScheme == null) {
+						logger.error("\tfieldScreenScheme: null");
+					} else {
+						logger.info("\tScreenScheme: " + fieldScreenScheme.getName());
+					}
+				}
+				// This is not going to help; we want to find the project's
+				// issue type screen scheme and add an association to it
+				//				logger.info("TEMP TEST CODE: *** Associating IssueTypeScreenScheme " + issueTypeScreenScheme.getName()
+				//						+ " with Project " + project.getName());
+				//				try {
+				//					ComponentAccessor.getIssueTypeScreenSchemeManager().addSchemeAssociation(project,
+				//							issueTypeScreenScheme);
+				//					logger.info("\tSuccess");
+				//				} catch (final Exception e) {
+				//					logger.error("\tError: " + e.getMessage());
+				//				}
+
+
+			}
+		}
+
+
+		try {
+			ComponentAccessor.getIssueTypeScreenSchemeManager().createIssueTypeScreenSchemeEntity(null);
+			logger.error("Success calling: ComponentAccessor.getIssueTypeScreenSchemeManager().createIssueTypeScreenSchemeEntity(null)");
+		} catch (final Throwable t) {
+			logger.error("Error calling: ComponentAccessor.getIssueTypeScreenSchemeManager().createIssueTypeScreenSchemeEntity(null): "
+					+ t.getMessage());
+		}
+	}
+
+	private IssueTypeScreenScheme getIssueTypeScreenSchemeByName(final String issueTypeScreenSchemeName) {
+
+		final Collection<IssueTypeScreenScheme> issueTypeScreenSchemes = ComponentAccessor
+				.getIssueTypeScreenSchemeManager().getIssueTypeScreenSchemes();
+		logger.info("TEMP TEST CODE: issueTypeScreenSchemes.size(): " + issueTypeScreenSchemes.size());
+		for (final IssueTypeScreenScheme issueTypeScreenScheme : issueTypeScreenSchemes) {
+			logger.info("TEMP TEST CODE: issueTypeScreenScheme: " + issueTypeScreenScheme.getName());
+			if (issueTypeScreenSchemeName.equals(issueTypeScreenScheme.getName())) {
+				return issueTypeScreenScheme;
+			}
+		}
+		logger.info("Issue Type Screen Scheme with name " + issueTypeScreenSchemeName + " not found");
+		return null;
+	}
+
+	private void associateIssueTypeWithScreenScheme(final IssueTypeScreenScheme issueTypeScreenScheme,
+			final IssueType issueType, final FieldScreenScheme screenScheme) {
+
+		logger.info("TEMP TEST CODE: Attempting to associate issue type " + issueType.getName()
+				+ " with screen scheme " + screenScheme.getName() + " on issue type screen scheme "
+				+ issueTypeScreenScheme.getName());
 		// IssueTypeScreenSchemeEntity
-		// arg0=ComponentAccessor.getIssueTypeScreenSchemeManager().
+		// arg0=null;
+		// ComponentAccessor.getIssueTypeScreenSchemeManager().
 		// issueTypeScreenScheme.addEntity(arg0);
 		// ComponentAccessor.getIssueTypeScreenSchemeManager().
 
+		//		ComponentAccessor.getIssueTypeScreenSchemeManager().
+
+		final IssueTypeScreenSchemeManager issueTypeScreenSchemeManager = ComponentAccessor
+				.getIssueTypeScreenSchemeManager();
+		final FieldScreenSchemeManager fieldScreenSchemeManager = ComponentAccessor
+				.getComponent(FieldScreenSchemeManager.class);
+		final ConstantsManager constantsManager = ComponentAccessor.getConstantsManager();
+		final IssueTypeScreenSchemeEntity issueTypeScreenSchemeEntity = new IssueTypeScreenSchemeEntityImpl(
+				issueTypeScreenSchemeManager, (GenericValue) null, fieldScreenSchemeManager, constantsManager);
+		issueTypeScreenSchemeEntity.setIssueTypeId(null);
+		issueTypeScreenSchemeEntity.setFieldScreenScheme(fieldScreenSchemeManager.getFieldScreenScheme(screenScheme
+				.getId()));
+		issueTypeScreenScheme.addEntity(issueTypeScreenSchemeEntity);
+		logger.info("TEMP TEST CODE: *************** Finished associating issue type " + issueType.getName()
+				+ " with screen scheme " + screenScheme.getName() + " on issue type screen scheme "
+				+ issueTypeScreenScheme.getName());
 	}
 
 	private IssueTypeScreenScheme getAnyIssueTypeScreenScheme() {
