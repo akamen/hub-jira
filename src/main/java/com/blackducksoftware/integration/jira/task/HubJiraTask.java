@@ -170,6 +170,15 @@ public class HubJiraTask {
 					// 1. Screen Scheme named "Test Screen Scheme"
 					// 2. Issue Type Screen Scheme named
 					// "Test Issue Type Screen Scheme"
+					// 3. Create a screen scheme named: Another Screen Scheme
+					// 4. Create an issue type screen scheme named: Another
+					// Issue Type Screen Scheme, Screen Scheme: Another Screen
+					// Scheme
+					// 5. Create a project named "Test"
+					// 6. Load the hub-atlassian-config plugin
+					// 7. Configure both plugins: Hub Admin, Hub Jira
+					// 8. Watch log: Wait for task to run; Create the project
+					// its looking for
 					final FieldScreenScheme screenScheme = getAnyScreenScheme();
 					if (screenScheme == null) {
 						logger.error("No Screen Scheme found to associate; aborting.");
@@ -317,7 +326,8 @@ public class HubJiraTask {
 				}
 				// This is not going to help; we want to find the project's
 				// issue type screen scheme and add an association to it
-				//				logger.info("TEMP TEST CODE: *** Associating IssueTypeScreenScheme " + issueTypeScreenScheme.getName()
+				// logger.info("TEMP TEST CODE: Associating IssueTypeScreenScheme "
+				// + issueTypeScreenScheme.getName()
 				//						+ " with Project " + project.getName());
 				//				try {
 				//					ComponentAccessor.getIssueTypeScreenSchemeManager().addSchemeAssociation(project,
@@ -381,9 +391,12 @@ public class HubJiraTask {
 		issueTypeScreenSchemeEntity.setFieldScreenScheme(fieldScreenSchemeManager.getFieldScreenScheme(screenScheme
 				.getId()));
 		issueTypeScreenScheme.addEntity(issueTypeScreenSchemeEntity);
-		logger.info("TEMP TEST CODE: *************** Finished associating issue type " + issueType.getName()
+		logger.info("TEMP TEST CODE: Finished associating issue type " + issueType.getName()
 				+ " with screen scheme " + screenScheme.getName() + " on issue type screen scheme "
 				+ issueTypeScreenScheme.getName());
+		logger.info("TEMP TEST CODE: Attempting store() on " + issueTypeScreenScheme.getName());
+		issueTypeScreenScheme.store();
+		logger.info("TEMP TEST CODE: Finished store() on " + issueTypeScreenScheme.getName());
 	}
 
 	private IssueTypeScreenScheme getAnyIssueTypeScreenScheme() {

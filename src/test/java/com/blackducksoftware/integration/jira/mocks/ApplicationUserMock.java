@@ -78,10 +78,4 @@ public class ApplicationUserMock implements ApplicationUser {
 		return false;
 	}
 
-	@Override
-	public Long getId() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }
