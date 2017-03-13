@@ -29,8 +29,17 @@ var hubCustomFields = ["BDS Hub Project", "BDS Hub Project Version", "BDS Hub Co
 	"BDS Hub Component Usage", "BDS Hub Component Origin", "BDS Hub Component Origin ID",
 	"BDS Hub Project Version Nickname"];
 
+var hubCustomFieldValues = [];
+
 function getCustomFieldValues() {
 	console.log("getCustomFieldValues()");
+	
+	// TODO factor out
+	for (hubCustomFieldIndex = 0; hubCustomFieldIndex < hubCustomFields.length; hubCustomFieldIndex++) {
+		hubCustomFieldValues.push("");
+	}
+	
+	
 	var detailsModule = AJS.$('#' + detailsModuleId);
 	if(detailsModule.length > 0){
 		var customFieldsModule = AJS.$(detailsModule).find('#' + customFieldsModuleId);
@@ -48,7 +57,44 @@ function getCustomFieldValues() {
 						var arrayIndex = hubCustomFields.indexOf(customFieldName);
 						if (arrayIndex >= 0) {
 							console.log("*** Found Hub custom field: " + customFieldName);
-							console.log("Value: " + customFieldPropertyValueField[0].innerText);
+							if (customFieldPropertyValueField.length > 0) {
+								console.log("custom field has a value");
+								var fieldValue = customFieldPropertyValueField[0].innerText;
+								console.log("Value: " + fieldValue);
+								hubCustomFieldValues[arrayIndex] = fieldValue;
+
+								// TODO hacking for now
+								if (customFieldName === "BDS Hub Project") {
+									var projectFieldList = AJS.$('.' + "module").find('#' + "hubProjectFieldList");
+									
+									var listItemElem = document.createElement("li");
+									listItemElem.className = "item"; // TODO item-right for every other one
+									var ListItemHubWrapDiv = document.createElement("div");
+									ListItemHubWrapDiv.className = "hubWrap";
+									
+									var ListItemFieldLabelStrong = document.createElement("strong");
+									ListItemFieldLabelStrong.className = "name";
+									var ListItemFieldValueDiv = document.createElement("div");
+									ListItemFieldValueDiv.id = "hubProjectName"; // TODO this will vary
+									ListItemFieldValueDiv.className = "value";
+									ListItemFieldLabelStrong.innerText = customFieldName;
+									ListItemFieldValueDiv.innerText = fieldValue;
+									
+									ListItemHubWrapDiv.append(ListItemFieldLabelStrong);
+									ListItemHubWrapDiv.append(ListItemFieldValueDiv);
+									listItemElem.append(ListItemHubWrapDiv);
+									
+									projectFieldList.append(listItemElem);
+									
+//									<li class="item">
+//									<div class="hubWrap">
+//										<strong class="name">$i18n.getText("hub.integration.jira.issue.custom.project.label"):</strong>
+//										<div id="hubProjectName" class="value">$bdsHubProject</div>
+//									</div>
+//									</li>
+								}
+
+							}
 						}
 					}
 				} else{
