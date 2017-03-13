@@ -65,8 +65,8 @@ function getFieldPartAtIndex(partIndex, fieldIndex) {
 }
 
 function getCustomFieldValues() {
-	var projectLeft=true;
-	var componentLeft=true;
+	var hubProjectFieldListLeft=true;
+	var hubComponentFieldListLeft=true;
 
 	console.log("getCustomFieldValues()");
 	
@@ -96,12 +96,34 @@ function getCustomFieldValues() {
 								var projectFieldList = AJS.$('.' + "module").find('#' + fieldListElementName);
 								
 								var listItemElem = document.createElement("li");
-								if (projectLeft) {
-									listItemElem.className = "item";
-									projectLeft=false;
+								
+								// TODO factor this out?
+								if (fieldListElementName === "hubProjectFieldList") {
+									console.log("This is a project field");
+									if (hubProjectFieldListLeft) {
+										console.log("Left");
+										listItemElem.className = "item";
+										hubProjectFieldListLeft=false;
+									} else {
+										console.log("Right");
+										listItemElem.className = "item-right fiftyPercent";
+										hubProjectFieldListLeft=true;
+									}
+								} else if (fieldListElementName === "hubComponentFieldList") {
+									console.log("This is a component field");
+									if (hubComponentFieldListLeft) {
+										console.log("Left");
+										listItemElem.className = "item";
+										hubComponentFieldListLeft=false;
+									} else {
+										console.log("Right");
+										listItemElem.className = "item-right fiftyPercent";
+										hubComponentFieldListLeft=true;
+									}
 								} else {
-									listItemElem.className = "item-right fiftyPercent";
-									projectLeft=true;
+									console.log("This is a policy field");
+									// Policy field is always on the left
+									listItemElem.className = "item";
 								}
 								
 								var ListItemHubWrapDiv = document.createElement("div");
