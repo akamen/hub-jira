@@ -49,14 +49,25 @@ function getIndexOfFieldName(targetFieldName) {
 	return -1;
 }
 
-function getLabelAtIndex(fieldIndex) {
+function getFieldCategoryAtIndex(fieldIndex) {
+	return getFieldPartAtIndex(1, fieldIndex);
+}
+
+function getFieldLabelAtIndex(fieldIndex) {
+	return getFieldPartAtIndex(2, fieldIndex);
+}
+
+function getFieldPartAtIndex(partIndex, fieldIndex) {
 	var entry = hubCustomFields[fieldIndex];
 	var parts = entry.split("|");
-	var label = parts[2];
-	return label;
+	var part = parts[partIndex];
+	return part;
 }
 
 function getCustomFieldValues() {
+	var projectLeft=true;
+	var componentLeft=true;
+
 	console.log("getCustomFieldValues()");
 	
 	var detailsModule = AJS.$('#' + detailsModuleId);
@@ -73,8 +84,8 @@ function getCustomFieldValues() {
 						var customFieldPropertyValueField =  AJS.$(property).find("div.value");
 						
 						var customFieldName = AJS.$(customFieldPropertyLabel).prop("title");
-						var arrayIndex = getIndexOfFieldName(customFieldName);
-						if (arrayIndex >= 0) {
+						var fieldIndex = getIndexOfFieldName(customFieldName);
+						if (fieldIndex >= 0) {
 							console.log("*** Found Hub custom field: " + customFieldName);
 							if (customFieldPropertyValueField.length > 0) {
 								console.log("custom field has a value");
@@ -82,20 +93,28 @@ function getCustomFieldValues() {
 								console.log("Value: " + fieldValue);
 
 								// TODO hacking for now
-								if (customFieldName === "BDS Hub Project") {
+								var fieldCategoryName = getFieldCategoryAtIndex(fieldIndex);
+								if (fieldCategoryName === "Project") {
 									var projectFieldList = AJS.$('.' + "module").find('#' + "hubProjectFieldList");
 									
 									var listItemElem = document.createElement("li");
-									listItemElem.className = "item"; // TODO item-right for every other one
+									if (projectLeft) {
+										listItemElem.className = "item";
+										projectLeft=false;
+									} else {
+										listItemElem.className = "item-right fiftyPercent";
+										projectLeft=true;
+									}
+									
 									var ListItemHubWrapDiv = document.createElement("div");
 									ListItemHubWrapDiv.className = "hubWrap";
 									
 									var ListItemFieldLabelStrong = document.createElement("strong");
 									ListItemFieldLabelStrong.className = "name";
 									var ListItemFieldValueDiv = document.createElement("div");
-									ListItemFieldValueDiv.id = "hubProjectName"; // TODO this will vary
+									ListItemFieldValueDiv.id = "hubProjectName"; // TODO this will vary; add to hubCustomFields
 									ListItemFieldValueDiv.className = "value";
-									var label = getLabelAtIndex(arrayIndex);
+									var label = getFieldLabelAtIndex(fieldIndex);
 									ListItemFieldLabelStrong.innerText = label;
 									ListItemFieldValueDiv.innerText = fieldValue;
 									

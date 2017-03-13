@@ -8,34 +8,7 @@ $webResourceManager.requireResource("com.blackducksoftware.integration.hub-jira:
 #if ($bdsHubProject || $bdsHubProjectVersion || $bdsHubProjectVersionNickname)
 <div class="module">
 <div class="mod-header"><h5 class="toggle-title">$i18n.getText("hub.integration.jira.issue.custom.section.project.label")</h5></div>
-<ul id="hubProjectFieldList" class="property-list two-cols">
-
-#if ($bdsHubProject)
-	<li class="item">
-		<div class="hubWrap">
-			<strong class="name">$i18n.getText("hub.integration.jira.issue.custom.project.label"):</strong>
-			<div id="hubProjectName" class="value">$bdsHubProject</div>
-		</div>
-	</li>
-#end
-#if ($bdsHubProjectVersion)
-	<li class="item-right fiftyPercent">
-		<div class="hubWrap">
-			<strong class="name">$i18n.getText("hub.integration.jira.issue.custom.project.version.label"):</strong>
-			<div id="hubProjectVersionName" class="value">$bdsHubProjectVersion</div>
-		</div>
-	</li>
-#end
-#if ($bdsHubProjectVersionNickname)
-	<li class="item">
-		<div class="hubWrap">
-			<strong class="name">$i18n.getText("hub.integration.jira.issue.custom.project.version.nickname.label"):</strong>
-			<div id="hubProjectVersionNickname" class="value">$bdsHubProjectVersionNickname</div>
-		</div>
-	</li>
-#end
-
-</ul>
+<ul id="hubProjectFieldList" class="property-list two-cols"></ul>
 </div>
 <div class="fieldSectionSeparator"/>
 #end
