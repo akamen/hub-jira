@@ -24,21 +24,40 @@
 var detailsModuleId = "details-module";
 var customFieldsModuleId = "customfieldmodule";
 
-var hubCustomFields = ["BDS Hub Project", "BDS Hub Project Version", "BDS Hub Component", 
-	"BDS Hub Component Version", "BDS Hub Policy Rule", "BDS Hub Component Licenses",
-	"BDS Hub Component Usage", "BDS Hub Component Origin", "BDS Hub Component Origin ID",
-	"BDS Hub Project Version Nickname"];
+// Format of each entry: <JIRA custom attribute name>|<category>|<label>
+var hubCustomFields = [
+	"BDS Hub Project|Project|Project", 
+	"BDS Hub Project Version|Project|Version", 
+	"BDS Hub Component|Component|Component", 
+	"BDS Hub Component Version|Component|Version", 
+	"BDS Hub Policy Rule|Policy|Rule", 
+	"BDS Hub Component Licenses|Component|Licenses",
+	"BDS Hub Component Usage|Component|Usage", 
+	"BDS Hub Component Origin|Component|Origin", 
+	"BDS Hub Component Origin ID|Component|Origin ID",
+	"BDS Hub Project Version Nickname|Project|Nickname"];
 
-var hubCustomFieldValues = [];
+function getIndexOfFieldName(targetFieldName) {
+	for (i=0; i < hubCustomFields.length; i++) {
+		var entry = hubCustomFields[i];
+		var parts = entry.split("|");
+		var currentFieldName = parts[0];
+		if (currentFieldName === targetFieldName) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+function getLabelAtIndex(fieldIndex) {
+	var entry = hubCustomFields[fieldIndex];
+	var parts = entry.split("|");
+	var label = parts[2];
+	return label;
+}
 
 function getCustomFieldValues() {
 	console.log("getCustomFieldValues()");
-	
-	// TODO factor out
-	for (hubCustomFieldIndex = 0; hubCustomFieldIndex < hubCustomFields.length; hubCustomFieldIndex++) {
-		hubCustomFieldValues.push("");
-	}
-	
 	
 	var detailsModule = AJS.$('#' + detailsModuleId);
 	if(detailsModule.length > 0){
@@ -54,14 +73,13 @@ function getCustomFieldValues() {
 						var customFieldPropertyValueField =  AJS.$(property).find("div.value");
 						
 						var customFieldName = AJS.$(customFieldPropertyLabel).prop("title");
-						var arrayIndex = hubCustomFields.indexOf(customFieldName);
+						var arrayIndex = getIndexOfFieldName(customFieldName);
 						if (arrayIndex >= 0) {
 							console.log("*** Found Hub custom field: " + customFieldName);
 							if (customFieldPropertyValueField.length > 0) {
 								console.log("custom field has a value");
 								var fieldValue = customFieldPropertyValueField[0].innerText;
 								console.log("Value: " + fieldValue);
-								hubCustomFieldValues[arrayIndex] = fieldValue;
 
 								// TODO hacking for now
 								if (customFieldName === "BDS Hub Project") {
@@ -77,7 +95,8 @@ function getCustomFieldValues() {
 									var ListItemFieldValueDiv = document.createElement("div");
 									ListItemFieldValueDiv.id = "hubProjectName"; // TODO this will vary
 									ListItemFieldValueDiv.className = "value";
-									ListItemFieldLabelStrong.innerText = customFieldName;
+									var label = getLabelAtIndex(arrayIndex);
+									ListItemFieldLabelStrong.innerText = label;
 									ListItemFieldValueDiv.innerText = fieldValue;
 									
 									ListItemHubWrapDiv.append(ListItemFieldLabelStrong);
@@ -143,7 +162,7 @@ function checkPropertyAndHideHubField(property){
 	var customFieldPropertyValueField =  AJS.$(property).find("div.value");
 	
 	var customFieldName = AJS.$(customFieldPropertyLabel).prop("title");
-	var arrayIndex = hubCustomFields.indexOf(customFieldName);
+	var arrayIndex = getIndexOfFieldName(customFieldName);
 	if (arrayIndex >= 0) {
 		var displayStyle = AJS.$(property).css("display");
 		if(displayStyle && displayStyle != "none"){
