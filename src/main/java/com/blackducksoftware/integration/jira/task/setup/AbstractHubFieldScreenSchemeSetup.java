@@ -255,25 +255,54 @@ public abstract class AbstractHubFieldScreenSchemeSetup {
 				}
 			}
 		}
+        logger.debug("Checking to see if we need to add any fields to Hub screen tab");
 		if (defaultTabs != null && !defaultTabs.isEmpty()) {
 			for (final FieldScreenTab tab : defaultTabs) {
 				final List<FieldScreenLayoutItem> layoutItems = tab.getFieldScreenLayoutItems();
 				for (final FieldScreenLayoutItem layoutItem : layoutItems) {
+                    if (configIsOk(myTab, layoutItem)) {
 					final FieldScreenLayoutItem existingField = myTab
 							.getFieldScreenLayoutItem(layoutItem.getOrderableField().getId());
 					if (existingField == null) {
+                            logger.debug("addHubTabToScreen(): This field is not yet on Hub screen tab; adding it");
 						myTab.addFieldScreenLayoutItem(layoutItem.getOrderableField().getId());
 						needToUpdateTabAndScreen = true;
 					}
 				}
 			}
 		}
+        }
 		if (needToUpdateTabAndScreen) {
+            logger.debug("addHubTabToScreen(): applying updates to Hub screen tab");
 			jiraServices.getFieldScreenManager().updateFieldScreenTab(myTab);
 		}
 
 		return needToUpdateTabAndScreen;
 	}
+
+    private boolean configIsOk(final FieldScreenTab myTab, final FieldScreenLayoutItem layoutItem) {
+        boolean isOk = true;
+        String msg;
+        if (myTab == null) {
+            msg = "addHubTabToScreen(): Hub screen tab is null";
+            logger.error(msg);
+            settingService.addHubError(msg, "addHubTabToScreen");
+            isOk = false;
+        }
+        if (layoutItem == null) {
+            msg = "addHubTabToScreen(): layoutItem is null";
+            logger.error(msg);
+            settingService.addHubError(msg, "addHubTabToScreen");
+            return false;
+        }
+        if (layoutItem.getOrderableField() == null) {
+            msg = "addHubTabToScreen(): layoutItem's field is null";
+            logger.error(msg);
+            settingService.addHubError(msg, "addHubTabToScreen");
+            return false;
+        }
+        return isOk;
+    }
 
 	private FieldScreen createPolicyViolationScreen(final IssueType issueType,
 			final List<Object> commonIssueTypeList) {
